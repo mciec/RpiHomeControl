@@ -1,12 +1,12 @@
-﻿internal enum AnimationDirection
+﻿internal enum Direction
 {
-    Left = 1,
-    Right = 2
+    LEFT = 1,
+    RIGHT = 2
 }
 
 internal interface IAnimation
 {
     void NextFrame();
     void Clear();
-    void Start(AnimationDirection direction)
+    void Start(Direction direction);
 }

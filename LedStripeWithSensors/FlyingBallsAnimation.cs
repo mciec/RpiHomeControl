@@ -11,17 +11,24 @@ using Iot.Device.Ws28xx;
 
 namespace LedStripeWithSensors;
 
-internal class FlyingBallsAnimation : IAnimation
+internal sealed class FlyingBallsAnimation : IAnimation
 {
     private readonly int _length;
     private readonly int _staticBallsCount;
     private readonly int _movingBallsCount;
+    private readonly Ws2812b _neopixel;
 
-    public FlyingBallsAnimation(int length = 100, int staticBallsCount = 4, int movingBallsCount = 3)
+    private FlyingBallsAnimation(int length, int staticBallsCount, int movingBallsCount, Ws2812b neopixel)
     {
         _length = length;
         _staticBallsCount = staticBallsCount;
         _movingBallsCount = movingBallsCount;
+        _neopixel = neopixel;
+    }
+
+    public static FlyingBallsAnimation Create(Ws2812b neopixel, int staticBallsCount = 4, int movingBallsCount = 3)
+    {
+        return new FlyingBallsAnimation(neopixel.Image.Width, staticBallsCount, movingBallsCount, neopixel);
     }
 
     public void Clear()
@@ -34,7 +41,7 @@ internal class FlyingBallsAnimation : IAnimation
 
     }
 
-    public void Start(AnimationDirection direction)
+    public void Start(Direction direction)
     {
         throw new NotImplementedException();
     }
