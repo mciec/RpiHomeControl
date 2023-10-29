@@ -61,7 +61,7 @@ internal sealed class AnimationManager : IAsyncDisposable
             if (OverrideLeft)
             {
                 _animation.Clear();
-                _animation.Start(Direction.Left);
+                _animation.Start(Direction.LEFT);
                 State = AnimationState.OverrideLeftRunning;
                 AnimationStart = now; ;
             }
@@ -69,7 +69,7 @@ internal sealed class AnimationManager : IAsyncDisposable
             if (OverrideRight)
             {
                 _animation.Clear();
-                _animation.Start(Direction.Right);
+                _animation.Start(Direction.RIGHT);
                 State = AnimationState.OverrideRightRunning;
                 AnimationStart = now;
             }
@@ -109,7 +109,7 @@ internal sealed class AnimationManager : IAsyncDisposable
             if (MovementLeft)
             {
                 _animation.Clear();
-                _animation.Start(Direction.Left);
+                _animation.Start(Direction.LEFT);
                 State = AnimationState.MovementLeftRunning;
                 AnimationStart = now;
 
@@ -118,7 +118,7 @@ internal sealed class AnimationManager : IAsyncDisposable
             if (MovementRight)
             {
                 _animation.Clear();
-                _animation.Start(Direction.Right);
+                _animation.Start(Direction.RIGHT);
                 State = AnimationState.MovementRightRunning;
                 AnimationStart = now;
             }

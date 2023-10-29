@@ -11,9 +11,6 @@ using Microsoft.Extensions.Options;
 
 namespace LedStripeWithSensors;
 
-
-
-
 internal sealed class MqttClient
 {
     private static bool IsConnectingInProgress = false;
@@ -28,7 +25,7 @@ internal sealed class MqttClient
         _config = config.Value;
     }
 
-    public async MqttClient ConnectAsync(Action onOverrideLeft, Action onOverrideRight)
+    public async Task<MqttClient> ConnectAsync(Action onOverrideLeft, Action onOverrideRight)
     {
         var options = new HiveMQClientOptions
         {
@@ -60,15 +57,24 @@ internal sealed class MqttClient
     {
         try
         {
-            await _client.PublishAsync(_config.MotionDetectedTopic, msg;
+            await _client.PublishAsync(_config.MotionDetectedTopic, msg);
         }
         catch (HiveMQttClientException ex)
         {
             Console.WriteLine(ex.Message);
+            if (!IsConnectingInProgress)
+            {
+                IsConnectingInProgress = true;
+                _ = ConnectWithRetry(5).ConfigureAwait(false);
+            }
         }
     }
 
-    private async Task ConnectWithRetry(int maxAttempts = 0)
+    private 
+
+
+
+    private async Task ConnectWithRetry(Action onConnected, int maxAttempts = 0)
     {
         IsConnectingInProgress = true;
         int delayMs = 100;
@@ -100,35 +106,18 @@ internal sealed class MqttClient
                 break;
             }
         }
+
+        if (_client.IsConnected())
+        {
+            try
+            {
+                onConnected();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
+        }
     }
 }
-
-// Publish a message
-Console.WriteLine("Publishing a test message...");
-var resultPublish = await client.PublishAsync(
-    topic,
-    JsonSerializer.Serialize(new
-    {
-        Command = "Hello",
-    })
-).ConfigureAwait(false);
-
-while (true)
-{
-    await Task.Delay(2000).ConfigureAwait(false);
-Console.WriteLine("Press q exit...");
-    if (Console.ReadKey().Key == ConsoleKey.Q)
-    {
-        Console.WriteLine("\n");
-        break;
-    }
-}
-
-Console.WriteLine("Disconnecting gracefully and waiting 5 seconds...");
-await client.DisconnectAsync().ConfigureAwait(false);
-await Task.Delay(5000).ConfigureAwait(false);
-
-
-
-}
-
+//await client.DisconnectAsync().ConfigureAwait(false);
