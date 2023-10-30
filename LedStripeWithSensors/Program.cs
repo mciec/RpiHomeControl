@@ -1,27 +1,23 @@
 ﻿using LedStripeWithSensors;
+using LedStripeWithSensors.MqttManager;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
 builder.Services.AddOptions<ClientConfig>("MqttConfig");
 builder.Services.AddScoped<IAnimation, FlyingBallsAnimation>();
-builder.Services.AddSingleton<MqttClient>(provider =>
-{
-    var config = provider.GetService<ClientConfig>();
-    var client = new MqttClient()
-})
+builder.Services.AddSingleton<MqttClient>();
 
 using IHost host = builder.Build();
 
 
-//    .ConfigureServices(services =>
-//    {
-//        services.AddSingleton<MyClass2>();
-//        services.AddSingleton<MyClass>();
-//    })
-//    .Build();
+var mqttClient = host.Services.GetService<MqttClient>();
 
-//var myClass = host.Services.GetService<MyClass>();
-//await myClass!.DoStuff();
+CancellationToken ct = new CancellationToken();
+
+mqttClient.Connect(
+    () => Console.WriteLine("Override LEFT"),
+    () => Console.WriteLine("Override RIGHT"),
+    ct);
 
 await host.RunAsync();

@@ -2,6 +2,6 @@
 
 internal class ExpiratingAsyncDelegate : IExpiratingAsyncDelegate
 {
-    public Task Delegate { get; set; } = null!;
+    public Func<CancellationToken, ValueTask<bool>> Delegate { get; set; } = null!;
     public DateTime? ExpirationDate { get; set; }
 }
