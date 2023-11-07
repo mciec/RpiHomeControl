@@ -49,11 +49,6 @@ internal sealed class AnimationManager : IAsyncDisposable
             () => MovementRight = true,
             () => MovementRight = false);
 
-        _neopixel.
-
-
-
-
         while (!ct.IsCancellationRequested)
         {
             now = DateTime.Now;

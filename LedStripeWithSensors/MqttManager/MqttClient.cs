@@ -14,7 +14,7 @@ namespace LedStripeWithSensors.MqttManager;
 
 internal sealed class MqttClient
 {
-    private readonly Mutex _allowReconnect;
+    private readonly SemaphoreSlim _allowReconnect;
 
     private const string MessageLeft = "LEFT";
     private const string MessageRight = "RIGHT";
@@ -27,15 +27,17 @@ internal sealed class MqttClient
     public MqttClient(IOptions<ClientConfig> config)
     {
         _config = config.Value;
-        _allowReconnect = new Mutex(false);
+        _allowReconnect = new SemaphoreSlim(1);
     }
 
     public MqttClient Connect(Action onOverrideLeft, Action onOverrideRight, CancellationToken ct)
     {
         var options = new HiveMQClientOptions
         {
+            ClientId = _config.ClientId,
             Host = _config.Host,
             Port = _config.Port,
+            UseTLS = _config.UseTLS,
             UserName = _config.User,
             Password = _config.Password,
         };
@@ -57,11 +59,12 @@ internal sealed class MqttClient
             }
         };
 
-        _client.AfterDisconnect += async (sender, args) => await ReconnectWithRetryAsync(0, ct).ConfigureAwait(false);
+        _client.AfterDisconnect += async (sender, args) =>
+        {
+            await ReconnectWithRetryAsync(0, ct).ConfigureAwait(false);
+        };
 
         _ = ReconnectWithRetryAsync(0, ct);
-
-        _ = _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
 
         return this;
     }
@@ -87,22 +90,34 @@ internal sealed class MqttClient
         if (_client.IsConnected())
             return true;
 
-        if (!_allowReconnect.WaitOne(1000))
+        //if (!_allowReconnect.WaitOne(1000))
+        if (!await _allowReconnect.WaitAsync(1000))
             return false;
 
         try
         {
             var connectResult = await _client.ConnectAsync().ConfigureAwait(false);
             if (connectResult.ReasonCode == HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
-                return true;
+            {
+                foreach (var sub in _client.Subscriptions)
+                {
+                    await _client.UnsubscribeAsync(sub);
+                }
+                var subscribeResult = await _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
+                return subscribeResult != null;
+            }
         }
         catch (HiveMQttClientException ex)
         {
             Console.WriteLine(ex.Message);
         }
+        catch (Exception ex)
+        {
+            Console.WriteLine(ex.Message);
+        }
         finally
         {
-            _allowReconnect.ReleaseMutex();
+            _allowReconnect.Release();
         }
         return false;
     }
