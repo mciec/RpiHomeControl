@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace LedStripeWithSensors.MqttManager;
 
-internal sealed class MqttClient
+internal sealed class MqttClient : IAsyncDisposable
 {
     private readonly SemaphoreSlim _allowReconnect;
 
@@ -143,5 +143,13 @@ internal sealed class MqttClient
             delayMs = Math.Min(delayMs * 2, 60_000);
         }
         return false;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_client?.IsConnected() == true)
+            await _client.DisconnectAsync().ConfigureAwait(false);
+
+        _consumerTask?.Dispose();
     }
 }
