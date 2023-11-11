@@ -1,5 +1,8 @@
-﻿using LedStripeWithSensors;
+﻿using Iot.Device.Ws28xx;
+using LedStripeWithSensors;
+using LedStripeWithSensors.Animations;
 using LedStripeWithSensors.MqttManager;
+using LedStripeWithSensors.Neopixel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -14,12 +17,19 @@ builder.Configuration
     .AddUserSecrets(Assembly.GetExecutingAssembly());
 
 var mqttPaswword = builder.Configuration["MqttConfig:Password"];
-builder.Services.AddOptions<ClientConfig>().BindConfiguration("MqttConfig")
+builder.Services.AddOptions<MqttClientConfig>().BindConfiguration("MqttConfig")
     .PostConfigure(config => { config.Password = mqttPaswword!; });
+builder.Services.AddOptions<MotionSensorsConfig>().BindConfiguration("MotionSensorsConfig");
+builder.Services.AddOptions<AnimationsConfig>().BindConfiguration("Animations");
+builder.Services.AddOptions<NeopixelConfig>().BindConfiguration("Neopixel");
 
-builder.Services.AddScoped<IAnimation, FlyingBallsAnimation>();
+builder.Services.AddScoped<AnimationFactory>();
 builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
+builder.Services.AddSingleton<Ws2812b>(new Ws2812b()
+{
+     
+})
 
 using IHost host = builder.Build();
 

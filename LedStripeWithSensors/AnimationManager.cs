@@ -8,6 +8,8 @@ using HiveMQtt.Client;
 using Iot.Device.Bno055;
 using HiveMQtt.MQTT5.Exceptions;
 using LedStripeWithSensors.MqttManager;
+using Microsoft.Extensions.Options;
+using LedStripeWithSensors.Animations;
 
 namespace LedStripeWithSensors;
 
@@ -27,8 +29,8 @@ internal sealed class AnimationManager : IAsyncDisposable
     private const int TimeGraularityMs = 1000;
     private readonly int _leftMotionDetectorPin;
     private readonly int _rightMotionDetectorPin;
+    private readonly AnimationFactory _animationFactory;
     private readonly MqttClient _mqttClient;
-    private readonly IAnimation _animation;
     private bool MovementLeft { get; set; } = false;
     private bool MovementRight { get; set; } = false;
     private bool OverrideLeft { get; set; } = false;
@@ -37,12 +39,12 @@ internal sealed class AnimationManager : IAsyncDisposable
     private AnimationState State { get; set; } = AnimationState.Stopped;
     private DateTime AnimationStart { get; set; } = DateTime.Now;
 
-    public AnimationManager(int leftMotionDetectorPin, int rightMotionDetectorPin, MqttClient mqttClient, IAnimation animation)
+    public AnimationManager(IOptions<MotionSensorsConfig> motionSensorsConfig, AnimationFactory animationFactory, MqttClient mqttClient)
     {
-        _leftMotionDetectorPin = leftMotionDetectorPin;
-        _rightMotionDetectorPin = rightMotionDetectorPin;
+        _leftMotionDetectorPin = motionSensorsConfig.Value.LeftMotionDetectorPin;
+        _rightMotionDetectorPin = motionSensorsConfig.Value.RightMotionDetectorPin;
+        _animationFactory = animationFactory;
         _mqttClient = mqttClient;
-        _animation = animation;
     }
 
     public async Task Run(CancellationToken ct)
@@ -55,6 +57,9 @@ internal sealed class AnimationManager : IAsyncDisposable
             () => MovementRight = true,
             () => MovementRight = false);
 
+        using var animation = _animationFactory.GetAnimation(typeof(FlyingBallsAnimation));
+
+
         _mqttClient.Connect(
             () => { OverrideLeft = true; OverrideRight = false; },
             () => { OverrideRight = true; OverrideLeft = false; },
@@ -66,16 +71,16 @@ internal sealed class AnimationManager : IAsyncDisposable
 
             if (OverrideLeft)
             {
-                _animation.Clear();
-                _animation.Start(Direction.LEFT);
+                animation.Clear();
+                animation.Start(Direction.LEFT);
                 State = AnimationState.OverrideLeftRunning;
                 AnimationStart = now; ;
             }
             else
             if (OverrideRight)
             {
-                _animation.Clear();
-                _animation.Start(Direction.RIGHT);
+                animation.Clear();
+                animation.Start(Direction.RIGHT);
                 State = AnimationState.OverrideRightRunning;
                 AnimationStart = now;
             }
@@ -86,11 +91,11 @@ internal sealed class AnimationManager : IAsyncDisposable
                 var timeLeftMs = (int)(now - AnimationStart).TotalMilliseconds;
                 if (timeLeftMs > 0)
                 {
-                    _animation.NextFrame();
+                    animation.NextFrame();
                     await Task.Delay(Math.Min(timeLeftMs, TimeGraularityMs));
                     continue;
                 }
-                _animation.Clear();
+                animation.Clear();
                 State = AnimationState.Stopped;
             }
 
@@ -104,18 +109,18 @@ internal sealed class AnimationManager : IAsyncDisposable
                 var timeLeftMs = (int)(now - AnimationStart).TotalMilliseconds;
                 if (timeLeftMs > 0)
                 {
-                    _animation.NextFrame();
+                    animation.NextFrame();
                     await Task.Delay(Math.Min(timeLeftMs, TimeGraularityMs));
                     continue;
                 }
-                _animation.Clear();
+                animation.Clear();
                 State = AnimationState.Stopped;
             }
 
             if (MovementLeft)
             {
-                _animation.Clear();
-                _animation.Start(Direction.LEFT);
+                animation.Clear();
+                animation.Start(Direction.LEFT);
                 State = AnimationState.MovementLeftRunning;
                 _mqttClient.Send(MessageOverrideLeft);
                 AnimationStart = now;
@@ -123,8 +128,8 @@ internal sealed class AnimationManager : IAsyncDisposable
             else
             if (MovementRight)
             {
-                _animation.Clear();
-                _animation.Start(Direction.RIGHT);
+                animation.Clear();
+                animation.Start(Direction.RIGHT);
                 State = AnimationState.MovementRightRunning;
                 _mqttClient.Send(MessageOverrideRight);
                 AnimationStart = now;

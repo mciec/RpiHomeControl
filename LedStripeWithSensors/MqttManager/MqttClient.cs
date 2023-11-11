@@ -19,12 +19,12 @@ internal sealed class MqttClient : IAsyncDisposable
     private const string MessageLeft = "LEFT";
     private const string MessageRight = "RIGHT";
 
-    private readonly ClientConfig _config;
+    private readonly MqttClientConfig _config;
     private HiveMQClient _client;
     private ChannelManagerWithRecovery _channelManager;
     private Task _consumerTask;
 
-    public MqttClient(IOptions<ClientConfig> config)
+    public MqttClient(IOptions<MqttClientConfig> config)
     {
         _config = config.Value;
         _allowReconnect = new SemaphoreSlim(1);

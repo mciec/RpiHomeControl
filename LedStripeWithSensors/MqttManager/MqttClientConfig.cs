@@ -1,5 +1,5 @@
-﻿namespace LedStripeWithSensors;
-internal sealed class ClientConfig
+﻿namespace LedStripeWithSensors.MqttManager;
+internal sealed class MqttClientConfig
 {
     public string ClientId { get; set; }
     public string Host { get; set; }
