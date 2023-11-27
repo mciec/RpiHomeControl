@@ -1,13 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
-using HiveMQtt.Client;
+﻿using HiveMQtt.Client;
 using HiveMQtt.Client.Exceptions;
 using HiveMQtt.Client.Options;
-using HiveMQtt.Client.Results;
 using Microsoft.Extensions.Options;
 
 namespace LedStripeWithSensors.MqttManager;
@@ -22,7 +15,6 @@ internal sealed class MqttClient : IAsyncDisposable
     private readonly MqttClientConfig _config;
     private HiveMQClient _client;
     private ChannelManagerWithRecovery _channelManager;
-    private Task _consumerTask;
 
     public MqttClient(IOptions<MqttClientConfig> config)
     {
@@ -42,9 +34,10 @@ internal sealed class MqttClient : IAsyncDisposable
             Password = _config.Password,
         };
 
-        _consumerTask = ChannelManagerWithRecovery.StartConsumer(
-            async (CancellationToken ct) => await ReconnectAsync().ConfigureAwait(false),
-            0, ct);
+        _channelManager = ChannelManagerWithRecovery.StartConsumer(
+            recoveryAsyncFunc: async (CancellationToken ct) => await ReconnectAsync().ConfigureAwait(false),
+            maxAttempts: 0, 
+            ct);
 
         _client = new HiveMQClient(options);
 
@@ -53,8 +46,9 @@ internal sealed class MqttClient : IAsyncDisposable
             string payload = args.PublishMessage.PayloadAsString.ToUpper();
             switch (payload)
             {
-                case MessageLeft: onOverrideLeft(); break;
-                case MessageRight: onOverrideRight(); break;
+                //TODO: clear
+                case MessageLeft: onOverrideLeft(); Send("left override detected"); break;
+                case MessageRight: onOverrideRight(); Send("right override detected"); break;
                 default: break;
             }
         };
@@ -78,7 +72,7 @@ internal sealed class MqttClient : IAsyncDisposable
         {
             Delegate = async (CancellationToken ct) =>
             {
-                var result = await _client.PublishAsync(_config.MotionDetectedTopic, msg);
+                var result = await _client.PublishAsync(_config.MotionDetectedTopic, msg).ConfigureAwait(false);
                 return true;
             },
             ExpirationDate = DateTime.UtcNow.AddSeconds(10)
@@ -90,8 +84,7 @@ internal sealed class MqttClient : IAsyncDisposable
         if (_client.IsConnected())
             return true;
 
-        //if (!_allowReconnect.WaitOne(1000))
-        if (!await _allowReconnect.WaitAsync(1000))
+        if (!await _allowReconnect.WaitAsync(1000).ConfigureAwait(false))
             return false;
 
         try
@@ -101,7 +94,7 @@ internal sealed class MqttClient : IAsyncDisposable
             {
                 foreach (var sub in _client.Subscriptions)
                 {
-                    await _client.UnsubscribeAsync(sub);
+                    await _client.UnsubscribeAsync(sub).ConfigureAwait(false);
                 }
                 var subscribeResult = await _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
                 return subscribeResult != null;
@@ -149,7 +142,5 @@ internal sealed class MqttClient : IAsyncDisposable
     {
         if (_client?.IsConnected() == true)
             await _client.DisconnectAsync().ConfigureAwait(false);
-
-        _consumerTask?.Dispose();
     }
 }

@@ -1,15 +1,15 @@
 ﻿using System.Device.Gpio;
 
-namespace LedStripeWithSensors;
+namespace LedStripeWithSensors.MotionSensor;
 
-internal sealed class MotionDetector : IDisposable
+internal sealed class MotionSensor : IDisposable
 {
     private readonly int _gpio;
     private readonly PinChangeEventHandler _onMotionOn;
     private readonly PinChangeEventHandler _onMotionOff;
     private GpioController _gpioController = null;
 
-    private MotionDetector(int gpio, Action onMotionOn, Action onMotionOff)
+    private MotionSensor(int gpio, Action onMotionOn, Action onMotionOff)
     {
         _gpio = gpio;
         _onMotionOn = (sender, args) => onMotionOn();
@@ -34,9 +34,9 @@ internal sealed class MotionDetector : IDisposable
             );
     }
 
-    public static MotionDetector CreateDetector(int gpio, Action onMotionOn, Action onMotionOff)
+    public static MotionSensor CreateSensor(int gpio, Action onMotionOn, Action onMotionOff)
     {
-        return new MotionDetector(gpio, onMotionOn, onMotionOff);
+        return new MotionSensor(gpio, onMotionOn, onMotionOff);
     }
 
     public void Dispose()

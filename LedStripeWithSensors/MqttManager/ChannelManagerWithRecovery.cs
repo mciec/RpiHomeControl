@@ -15,20 +15,18 @@ internal sealed class ChannelManagerWithRecovery
         _expiratingDelegateChannel = Channel.CreateUnbounded<IExpiratingAsyncDelegate>();
     }
 
-
-    public static Task StartConsumer(Func<CancellationToken, ValueTask<bool>> recoveryAsyncFunc, int maxAttempts, CancellationToken ct = default)
+    public static ChannelManagerWithRecovery StartConsumer(Func<CancellationToken, ValueTask<bool>> recoveryAsyncFunc, int maxAttempts, CancellationToken ct = default)
     {
-        var consumer = new ChannelManagerWithRecovery(recoveryAsyncFunc, maxAttempts);
+        var channelManager = new ChannelManagerWithRecovery(recoveryAsyncFunc, maxAttempts);
         var consumerTask = Task.Run(async () =>
         {
             while (!ct.IsCancellationRequested)
             {
-                var expiratingDelegate = await consumer._expiratingDelegateChannel.Reader.ReadAsync(ct);
-                await consumer.ConsumeWithRecovery(expiratingDelegate, ct);
+                var expiratingDelegate = await channelManager._expiratingDelegateChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
+                await channelManager.ConsumeWithRecovery(expiratingDelegate, ct).ConfigureAwait(false);
             }
         }, ct);
-        return consumerTask;
-
+        return channelManager;
     }
 
     public bool Send(IExpiratingAsyncDelegate expiratingDelegate)
@@ -52,7 +50,7 @@ internal sealed class ChannelManagerWithRecovery
                 if (expiratingDelegate.ExpirationDate > DateTime.Now)
                     return;
 
-                var now = DateTime.Now;
+                var now = DateTime.UtcNow;
                 var timeLeftMs = expiratingDelegate.ExpirationDate == null
                     ? 0
                     : (int)(expiratingDelegate.ExpirationDate.Value - now).TotalMilliseconds;
@@ -61,11 +59,11 @@ internal sealed class ChannelManagerWithRecovery
                     return;
 
                 if (attemptNo > 0)
-                    recoveryFuncResult = await _recoveryFunc(ct);
+                    recoveryFuncResult = await _recoveryFunc(ct).ConfigureAwait(false);
 
                 if (recoveryFuncResult)
                 {
-                    expiratingDelegateResult = await expiratingDelegate.Delegate(ct);
+                    expiratingDelegateResult = await expiratingDelegate.Delegate(ct).ConfigureAwait(false);
                     if (expiratingDelegateResult)
                         return;
                 }
@@ -78,9 +76,9 @@ internal sealed class ChannelManagerWithRecovery
                 attemptNo++;
             }
 
-            await Task.Delay(delayMs, ct);
+            await Task.Delay(delayMs, ct).ConfigureAwait(false);
             delayMs = Math.Min(delayMs * 2, 6_400);
 
-        } while (_maxAttempts == 0 || attemptNo >= _maxAttempts);
+        } while (!ct.IsCancellationRequested && (_maxAttempts == 0 || attemptNo <= _maxAttempts));
     }
 }

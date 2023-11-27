@@ -1,4 +1,4 @@
-﻿namespace LedStripeWithSensors;
+﻿namespace LedStripeWithSensors.MotionSensor;
 
 internal sealed class MotionSensorsConfig
 {

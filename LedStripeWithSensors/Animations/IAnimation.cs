@@ -8,6 +8,6 @@
 internal interface IAnimation : IDisposable
 {
     void NextFrame();
-    void Clear();
+    void Stop();
     void Start(Direction direction);
 }

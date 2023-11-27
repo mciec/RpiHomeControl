@@ -8,8 +8,14 @@ namespace LedStripeWithSensors.Neopixel;
 
 internal sealed class Neopixel
 {
-    public Neopixel(Ne)
+    private readonly NeopixelConfig _neopixelConfig;
+
+    public Neopixel(NeopixelConfig neopixelConfig)
     {
-        
+        _neopixelConfig = neopixelConfig;
+
+
     }
+
+
 }
