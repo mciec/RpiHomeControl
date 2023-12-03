@@ -17,7 +17,11 @@ builder.Configuration.Sources.Clear();
 builder.Configuration
     .AddJsonFile("appSettings.json", optional: false, reloadOnChange: true)
     .AddJsonFile($"appSettings.{builder.Environment.EnvironmentName}.json", true, true)
-    .AddUserSecrets(Assembly.GetExecutingAssembly());
+    .AddUserSecrets(Assembly.GetExecutingAssembly())
+    .AddEnvironmentVariables(src =>
+    {
+        src.Prefix = "DOTNET_LEDSTRIPEWITHSENSORS_";
+    });
 
 var mqttPaswword = builder.Configuration["MqttConfig:Password"];
 builder.Services.AddOptions<MqttClientConfig>().BindConfiguration("MqttConfig")
