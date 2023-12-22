@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using LedStripeWithSensors.Animations;
 using LedStripeWithSensors.MotionSensor;
+using System.Diagnostics;
 
 namespace LedStripeWithSensors.AnimationManager;
 
@@ -47,6 +48,7 @@ internal sealed class AnimationManager : IDisposable
     public async Task Run(CancellationToken ct)
     {
         DateTime now = DateTime.Now;
+        Debugger.Launch();
         using var motionDetectorLeft = MotionSensor.MotionSensor.CreateSensor(_leftMotionDetectorPin,
             () => MovementLeft = true,
             () => MovementLeft = false);

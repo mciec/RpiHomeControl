@@ -1,4 +1,5 @@
 ﻿using Iot.Device.Ws28xx;
+using System.Drawing;
 
 namespace LedStripeWithSensors.Animations;
 
@@ -25,7 +26,19 @@ internal sealed class FlyingBallsAnimation : AnimationBase
 
     protected override void GenerateNextFrame()
     {
+        SetAllBlack();
+        var x = FrameNumber % Length;
+        Neopixel.Image.SetPixel(x, 0, System.Drawing.Color.DarkOrange);
+        Neopixel.Update();
 
+    }
+
+    private void SetAllBlack()
+    {
+        for (int i = 0; i < Length; i++)
+        {
+            Neopixel.Image.SetPixel(i, 0, Color.Black);
+        }
     }
 }
 

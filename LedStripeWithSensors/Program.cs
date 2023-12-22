@@ -36,7 +36,6 @@ builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
 builder.Services.AddSingleton(provider =>
     {
-        return null;
         SpiConnectionSettings settings = new(0, 0)
         {
             ClockFrequency = 2_400_000,

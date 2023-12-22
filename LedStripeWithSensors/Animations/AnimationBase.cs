@@ -23,6 +23,7 @@ internal abstract class AnimationBase : IAnimation
         FrameNumber = 0;
         //TODO: fix
         Neopixel?.Image.Clear();
+        Neopixel?.Update();
         if (_verbose) PrintStatus();
     }
 
