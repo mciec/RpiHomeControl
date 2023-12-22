@@ -55,14 +55,8 @@ using IHost host = builder.Build();
 
 CancellationToken ct = new();
 
-using var animationManager = host.Services.GetRequiredService<AnimationManager>();
+var animationManager = host.Services.GetRequiredService<AnimationManager>();
 
 _ = Task.Run(() => animationManager.Run(ct));
-
-//var mqttClient = host.Services.GetService<MqttClient>();
-//mqttClient.Connect(
-//    () => Console.WriteLine("Override LEFT"),
-//    () => Console.WriteLine("Override RIGHT"),
-//    ct);
 
 await host.RunAsync();

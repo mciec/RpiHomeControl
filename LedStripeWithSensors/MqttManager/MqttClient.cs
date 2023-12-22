@@ -142,5 +142,6 @@ internal sealed class MqttClient : IAsyncDisposable
     {
         if (_client?.IsConnected() == true)
             await _client.DisconnectAsync().ConfigureAwait(false);
+        _client?.Dispose();
     }
 }

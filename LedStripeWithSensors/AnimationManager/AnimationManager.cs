@@ -15,7 +15,7 @@ internal enum AnimationState
     MovementRightRunning = 4,
 }
 
-internal sealed class AnimationManager : IDisposable
+internal sealed class AnimationManager
 {
     private const string MessageOverrideLeft = "LEFT";
     private const string MessageOverrideRight = "RIGHT";
@@ -48,13 +48,17 @@ internal sealed class AnimationManager : IDisposable
     public async Task Run(CancellationToken ct)
     {
         DateTime now = DateTime.Now;
-        Debugger.Launch();
+        //TODO: remove
+        //await Task.Delay(15000);
         using var motionDetectorLeft = MotionSensor.MotionSensor.CreateSensor(_leftMotionDetectorPin,
             () => MovementLeft = true,
             () => MovementLeft = false);
+        motionDetectorLeft.Run();
+
         using var motionDetectorRight = MotionSensor.MotionSensor.CreateSensor(_rightMotionDetectorPin,
             () => MovementRight = true,
             () => MovementRight = false);
+        motionDetectorRight.Run();
 
         using var animation = _animationFactory.GetAnimation(typeof(FlyingBallsAnimation));
 
@@ -131,10 +135,5 @@ internal sealed class AnimationManager : IDisposable
             }
 
         }
-    }
-
-    public void Dispose()
-    {
-        throw new NotImplementedException();
     }
 }
