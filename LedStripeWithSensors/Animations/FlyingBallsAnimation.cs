@@ -57,14 +57,6 @@ internal sealed class FlyingBallsAnimation : AnimationBase
         Neopixel.Update();
     }
 
-    private void SetAllBlack()
-    {
-        for (int i = 0; i < Length; i++)
-        {
-            Neopixel.Image.SetPixel(i, 0, Color.Black);
-        }
-    }
-
     private void GenerateSin()
     {
         Console.WriteLine();
@@ -75,7 +67,7 @@ internal sealed class FlyingBallsAnimation : AnimationBase
         int[] movingSinus1 = new int[Length];
         for (int i = 0; i < Length; i++)
         {
-            int startingAngle = FrameNumber * 5;
+            int startingAngle = FrameNumber * 5 * (Direction == Direction.LEFT ? -1 : 1);
             int omegaT = i * 10;
 
             //movingSinus1[i] = Sinus(startingAngle + omegaT) + 128;
@@ -86,7 +78,7 @@ internal sealed class FlyingBallsAnimation : AnimationBase
         int[] movingSinus2 = new int[Length];
         for (int i = 0; i < Length; i++)
         {
-            int startingAngle = FrameNumber * 7;
+            int startingAngle = FrameNumber * 7 * (Direction == Direction.LEFT ? -1 : 1);
             int omegaT = i * 13;
 
             //movingSinus2[i] = Sinus(startingAngle + omegaT) + 128;
@@ -113,9 +105,8 @@ internal sealed class FlyingBallsAnimation : AnimationBase
 
             //stretchingSinus[i] = Sinus(stretchingOmega * t) + 128;
             stretchingSinus[i] = SinusSqr(stretchingOmega * t);
-            Console.Write($"{stretchingSinus[i],4}");
+            //Console.Write($"{stretchingSinus[i],4}");
         }
-
 
         for (int i = 0; i < Length; i++)
         {
