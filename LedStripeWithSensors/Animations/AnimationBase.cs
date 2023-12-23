@@ -4,7 +4,7 @@ namespace LedStripeWithSensors.Animations;
 
 internal abstract class AnimationBase : IAnimation
 {
-    private readonly bool _verbose = false;
+    private readonly bool _verbose = true;
     protected readonly Ws2812b Neopixel;
     protected readonly int Length;
     protected int FrameNumber;

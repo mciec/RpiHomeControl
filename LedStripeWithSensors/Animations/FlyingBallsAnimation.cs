@@ -59,7 +59,7 @@ internal sealed class FlyingBallsAnimation : AnimationBase
 
     private void GenerateSin()
     {
-        Console.WriteLine();
+        //Console.WriteLine();
 
         int maxStretchingOmega = 20;
         int minStretchingOmega = 3;
