@@ -1,0 +1,73 @@
+﻿@page "/animation"
+@using Animations1d
+@using Animations1d.Display
+@using BlazorAnimationSimulator.Client.Components
+@using Microsoft.Extensions.Options
+@rendermode InteractiveWebAssembly
+
+@inject IOptions<AnimationsConfig> animationsConfig
+@inject IDisplay display
+
+<h3>Animation</h3>
+
+<div style="background-color: black">
+    <Display matrix="Matrix" />
+</div>
+
+@code {
+    public IDisplay _display = null!;
+    public IAnimation _animation = null!;
+    public CancellationTokenSource _cts = new();
+    public Task _animationTask = null!;
+    public RGB[] Matrix { get; set; }
+
+    protected override void OnInitialized()
+    {
+        base.OnInitialized();
+        Console.Write("animation run");
+
+        var ct = _cts.Token;
+        _animationTask = Task.Run(async () =>
+        {
+            while (!ct.IsCancellationRequested)
+            {
+                if (_animation is not null)
+                {
+                    await Task.Delay(40);
+                    _animation.NextFrame();
+
+                    RGB[] tmp = new RGB[_display.Width];
+                    for (int i = 0; i < _display.Width; i++)
+                    {
+                        tmp[i] = _display.Matrix[i];
+                    }
+                    Matrix = tmp;
+
+                    await InvokeAsync(StateHasChanged);
+                }
+
+            }
+            if (ct.IsCancellationRequested)
+            {
+                throw new OperationCanceledException();
+            }
+        }, ct);
+        StateHasChanged();
+    }
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _display = display;
+            AnimationFactory animationFactory = new AnimationFactory(animationsConfig, _display);
+            _animation = animationFactory.GetAnimation(typeof(ShootingLaserAnimation));
+            _animation.Start(Direction.LEFT);
+        }
+
+        await base.OnAfterRenderAsync(firstRender);
+
+    }
+
+}

@@ -1,10 +1,9 @@
-﻿using Iot.Device.Ws28xx;
-using LedStripeWithSensors.Display;
+﻿using Animations1d.Display;
 using Microsoft.Extensions.Options;
 
-namespace LedStripeWithSensors.Animations;
+namespace Animations1d;
 
-internal class AnimationFactory
+public class AnimationFactory
 {
     private readonly IOptions<AnimationsConfig> _animationsConfig;
     private readonly IDisplay _display;
@@ -20,6 +19,11 @@ internal class AnimationFactory
         {
             return FlyingBallsAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display);
         }
+        if (type == typeof(ShootingLaserAnimation))
+        {
+            return ShootingLaserAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display);
+        }
+
         throw new Exception($"Unknown IAnimation: {type.Name}");
     }
 }

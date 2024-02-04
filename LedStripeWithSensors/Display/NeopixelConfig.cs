@@ -1,4 +1,4 @@
-﻿namespace LedStripeWithSensors.Neopixel;
+﻿namespace LedStripeWithSensors.Display;
 
 internal sealed class NeopixelConfig
 {

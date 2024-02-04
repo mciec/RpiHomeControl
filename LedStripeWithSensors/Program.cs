@@ -1,14 +1,12 @@
 ﻿using Iot.Device.Ws28xx;
 using LedStripeWithSensors.AnimationManager;
 using LedStripeWithSensors.Animations;
+using LedStripeWithSensors.Display;
 using LedStripeWithSensors.MotionSensor;
 using LedStripeWithSensors.MqttManager;
-using LedStripeWithSensors.Neopixel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Options;
-using System.Device.Spi;
 using System.Reflection;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
@@ -34,22 +32,24 @@ builder.Services.AddOptions<AnimationManagerConfig>().BindConfiguration("Manager
 builder.Services.AddScoped<AnimationFactory>();
 builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
-builder.Services.AddSingleton(provider =>
-    {
-        SpiConnectionSettings settings = new(0, 0)
-        {
-            ClockFrequency = 2_400_000,
-            Mode = SpiMode.Mode0,
-            DataBitLength = 8
-        };
 
-        var spi = SpiDevice.Create(settings);
-        var neopixelConfig = provider.GetService<IOptions<NeopixelConfig>>();
-        if (neopixelConfig is null)
-            throw new Exception("NeopixelConfig not available");
-        var ws2812B = new Ws2812b(spi, neopixelConfig.Value.Width);
-        return ws2812B;
-    });
+builder.Services.AddSingleton<IDisplay, Neopixel>();
+//builder.Services.AddSingleton(provider =>
+//    {
+//        SpiConnectionSettings settings = new(0, 0)
+//        {
+//            ClockFrequency = 2_400_000,
+//            Mode = SpiMode.Mode0,
+//            DataBitLength = 8
+//        };
+
+//        var spi = SpiDevice.Create(settings);
+//        var neopixelConfig = provider.GetService<IOptions<NeopixelConfig>>();
+//        if (neopixelConfig is null)
+//            throw new Exception("NeopixelConfig not available");
+//        var ws2812B = new Ws2812b(spi, neopixelConfig.Value.Width);
+//        return ws2812B;
+//    });
 
 using IHost host = builder.Build();
 

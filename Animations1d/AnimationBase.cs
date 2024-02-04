@@ -1,8 +1,8 @@
-﻿using LedStripeWithSensors.Display;
+﻿using Animations1d.Display;
 
-namespace LedStripeWithSensors.Animations;
+namespace Animations1d;
 
-internal abstract class AnimationBase : IAnimation
+public abstract class AnimationBase : IAnimation
 {
     private readonly bool _verbose = true;
     protected readonly IDisplay Display;

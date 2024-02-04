@@ -1,13 +1,13 @@
-﻿namespace LedStripeWithSensors.Animations;
+﻿namespace Animations1d;
 
-internal enum Direction
+public enum Direction
 {
     NONE = 0,
     LEFT = 1,
     RIGHT = 2
 }
 
-internal interface IAnimation : IDisposable
+public interface IAnimation : IDisposable
 {
     void NextFrame();
     void Stop();
