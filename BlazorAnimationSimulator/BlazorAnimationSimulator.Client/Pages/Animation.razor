@@ -7,19 +7,39 @@
 
 @inject IOptions<AnimationsConfig> animationsConfig
 @inject IDisplay display
+@inject IDisplay display2
+@inject IDisplay display3
+
 
 <h3>Animation</h3>
-
+@* <div class="flexbox-container">
+    <div class="flexbox-item flexbox-item-1"></div>
+    <div class="flexbox-item flexbox-item-2"></div>
+    <div class="flexbox-item flexbox-item-3"></div>
+</div>
+ *@
+ 
 <div style="background-color: black">
     <Display matrix="Matrix" />
 </div>
+<div style="background-color: black">
+    <Display matrix="Matrix2" />
+</div>
+<div style="background-color: black">
+    <Display matrix="Matrix3" />
+</div>
 
 @code {
-    public IDisplay _display = null!;
     public IAnimation _animation = null!;
+    public RGB[] Matrix { get; set; }
+
     public CancellationTokenSource _cts = new();
     public Task _animationTask = null!;
-    public RGB[] Matrix { get; set; }
+
+    public RGB[] Matrix2 { get; set; }
+    public RGB[] Matrix3 { get; set; }
+    public IAnimation _animation2 = null!;
+    public IAnimation _animation3 = null!;
 
     protected override void OnInitialized()
     {
@@ -33,18 +53,40 @@
             {
                 if (_animation is not null)
                 {
-                    await Task.Delay(40);
                     _animation.NextFrame();
 
-                    RGB[] tmp = new RGB[_display.Width];
-                    for (int i = 0; i < _display.Width; i++)
+                    RGB[] tmp = new RGB[display.Width];
+                    for (int i = 0; i < display.Width; i++)
                     {
-                        tmp[i] = _display.Matrix[i];
+                        tmp[i] = display.Matrix[i];
                     }
                     Matrix = tmp;
-
-                    await InvokeAsync(StateHasChanged);
                 }
+
+                if (_animation2 is not null)
+                {
+                    _animation2.NextFrame();
+                    RGB[] tmp = new RGB[display2.Width];
+                    for (int i = 0; i < display2.Width; i++)
+                    {
+                        tmp[i] = display2.Matrix[i];
+                    }
+                    Matrix2 = tmp;
+                }
+
+                if (_animation3 is not null)
+                {
+                    _animation3.NextFrame();
+                    RGB[] tmp = new RGB[display3.Width];
+                    for (int i = 0; i < display3.Width; i++)
+                    {
+                        tmp[i] = display3.Matrix[i];
+                    }
+                    Matrix3 = tmp;
+                }
+
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(40);
 
             }
             if (ct.IsCancellationRequested)
@@ -60,10 +102,20 @@
     {
         if (firstRender)
         {
-            _display = display;
-            AnimationFactory animationFactory = new AnimationFactory(animationsConfig, _display);
-            _animation = animationFactory.GetAnimation(typeof(ShootingLaserAnimation));
+            animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 1;
+            AnimationFactory animationFactory = new AnimationFactory(animationsConfig, display);
+            _animation = animationFactory.GetAnimation(typeof(WavesAnimation));
             _animation.Start(Direction.LEFT);
+
+            animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 2;
+            animationFactory = new AnimationFactory(animationsConfig, display2);
+            _animation2 = animationFactory.GetAnimation(typeof(WavesAnimation));
+            _animation2.Start(Direction.LEFT);
+            
+            animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 4;
+            animationFactory = new AnimationFactory(animationsConfig, display3);
+            _animation3 = animationFactory.GetAnimation(typeof(WavesAnimation));
+            _animation3.Start(Direction.LEFT);
         }
 
         await base.OnAfterRenderAsync(firstRender);

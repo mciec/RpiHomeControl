@@ -23,6 +23,10 @@ public class AnimationFactory
         {
             return ShootingLaserAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display);
         }
+        if (type == typeof(WavesAnimation))
+        {
+            return WavesAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display);
+        }
 
         throw new Exception($"Unknown IAnimation: {type.Name}");
     }

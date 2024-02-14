@@ -7,9 +7,6 @@ public sealed class ShootingLaserAnimation : AnimationBase
 {
     private readonly int _laserBeamsCount;
 
-    private LaserBeam[] LaserBeams { get; set; }
-
-
     private static double oneDegree = Math.PI / 180.0;
     private static byte[] SinLookup;
     private static byte[] SinSqrLookup;
@@ -34,6 +31,7 @@ public sealed class ShootingLaserAnimation : AnimationBase
         }
 
     }
+    private LaserBeam[] LaserBeams { get; set; }
 
     private ShootingLaserAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display) : base(display)
     {
@@ -72,7 +70,6 @@ public sealed class ShootingLaserAnimation : AnimationBase
                 LaserBeams[i].Initialize(0);
                 //LaserBeams[i].Initialize(Display.Width);
             }
-
             LaserBeams[i].T++;
 
             for (int x = 0; x < Display.Width; x++)
@@ -94,19 +91,42 @@ public sealed class ShootingLaserAnimation : AnimationBase
         }
     }
     private int Sinus(int angle) => angle < 0 ? -SinLookup[-angle % 360] : SinLookup[angle % 360];
-
     private int SinusSqr(int angle) => SinSqrLookup[Math.Abs(angle) % 360];
-
 }
 
 internal class LaserBeam
 {
+    private static double oneDegree = Math.PI / 180.0;
+    private static byte[] SinLookup;
+    private static byte[] SinSqrLookup;
+    private static byte[] CosLookup;
+    private static byte[] CosSqrLookup;
+
+    static LaserBeam()
+    {
+        SinLookup = new byte[360];
+        SinSqrLookup = new byte[360];
+        CosLookup = new byte[360];
+        CosSqrLookup = new byte[360];
+        double degree = 0;
+        for (int i = 0; i < SinLookup.Length; i++)
+        {
+            var sinus = Math.Sin(degree);
+            SinLookup[i] = (byte)(sinus * 127);
+            SinSqrLookup[i] = (byte)(sinus * sinus * 255);
+            CosLookup[i] = (byte)(Math.Cos(degree) * 127);
+            CosSqrLookup[i] = (byte)(255 - SinSqrLookup[i]);
+            degree += oneDegree;
+        }
+
+    }
+
     public RGB Color { get; set; }
 
     public int X0 { get; set; }
     public int T { get; set; }
     public int V { get; set; }
-    public double GlowIntensity(double t) => t < 15 ? 1 - t / 5 : 0;
+    public double GlowIntensity(double t) => t < 15 ? 1 - t / 15 : 0;
 
     public int X => X0 + (T * V);   //constant speed movement
     public double TatX(int x) => (x - X0) / (double)V;
@@ -159,17 +179,17 @@ internal class LaserBeam
 
     public void Initialize(int x0)
     {
-        int v = Random.Shared.Next(4) + 2;
-
+        byte r = 0, g = 0, b = 0;
         //byte r = (byte)Random.Shared.Next(256);
         //byte g = (byte)Random.Shared.Next(256);
         //int leftover = 510 - r - g;
         //byte b = leftover <= 255 ? (byte)leftover : (byte)255;
 
-        byte r = (byte)(Random.Shared.Next(2) * 128 + Random.Shared.Next(2) * 127);
-        byte g = (byte)(Random.Shared.Next(2) * 128 + Random.Shared.Next(2) * 127);
-        byte b = (byte)(Random.Shared.Next(2) * 128 + Random.Shared.Next(2) * 127);
-
+        //intensive 
+        int v = Random.Shared.Next(4) + 1;
+        r = (byte)(Random.Shared.Next(2) * 128 + Random.Shared.Next(2) * 127);
+        g = (byte)(Random.Shared.Next(2) * 128 + Random.Shared.Next(2) * 127);
+        b = (byte)(Random.Shared.Next(2) * 128 + Random.Shared.Next(2) * 127);
 
         Color = new RGB(r, g, b);
         T = 0;
