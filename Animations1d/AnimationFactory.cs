@@ -27,7 +27,10 @@ public class AnimationFactory
         {
             return WavesAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display);
         }
-
+        if (type == typeof(TraceAnimation))
+        {
+            return TraceAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display);
+        }
         throw new Exception($"Unknown IAnimation: {type.Name}");
     }
 }

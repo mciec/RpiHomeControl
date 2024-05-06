@@ -9,6 +9,7 @@
 @inject IDisplay display
 @inject IDisplay display2
 @inject IDisplay display3
+@inject IDisplay display4
 
 
 <h3>Animation</h3>
@@ -16,8 +17,8 @@
     <div class="flexbox-item flexbox-item-1"></div>
     <div class="flexbox-item flexbox-item-2"></div>
     <div class="flexbox-item flexbox-item-3"></div>
-</div>
- *@
+</div> *@
+
  
 <div style="background-color: black">
     <Display matrix="Matrix" />
@@ -27,6 +28,9 @@
 </div>
 <div style="background-color: black">
     <Display matrix="Matrix3" />
+</div>
+<div style="background-color: black">
+    <Display matrix="Matrix4" />
 </div>
 
 @code {
@@ -38,8 +42,10 @@
 
     public RGB[] Matrix2 { get; set; }
     public RGB[] Matrix3 { get; set; }
+    public RGB[] Matrix4 { get; set; }
     public IAnimation _animation2 = null!;
     public IAnimation _animation3 = null!;
+    public IAnimation _animation4 = null!;
 
     protected override void OnInitialized()
     {
@@ -85,6 +91,17 @@
                     Matrix3 = tmp;
                 }
 
+                if (_animation4 is not null)
+                {
+                    _animation4.NextFrame();
+                    RGB[] tmp = new RGB[display4.Width];
+                    for (int i = 0; i < display4.Width; i++)
+                    {
+                        tmp[i] = display4.Matrix[i];
+                    }
+                    Matrix4 = tmp;
+                }
+
                 await InvokeAsync(StateHasChanged);
                 await Task.Delay(40);
 
@@ -104,7 +121,7 @@
         {
             animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 1;
             AnimationFactory animationFactory = new AnimationFactory(animationsConfig, display);
-            _animation = animationFactory.GetAnimation(typeof(WavesAnimation));
+            _animation = animationFactory.GetAnimation(typeof(TraceAnimation));
             _animation.Start(Direction.LEFT);
 
             animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 2;
@@ -112,10 +129,15 @@
             _animation2 = animationFactory.GetAnimation(typeof(WavesAnimation));
             _animation2.Start(Direction.LEFT);
             
-            animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 4;
+            animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 3;
             animationFactory = new AnimationFactory(animationsConfig, display3);
             _animation3 = animationFactory.GetAnimation(typeof(WavesAnimation));
             _animation3.Start(Direction.LEFT);
+
+            animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 4;
+            animationFactory = new AnimationFactory(animationsConfig, display4);
+            _animation4 = animationFactory.GetAnimation(typeof(WavesAnimation));
+            _animation4.Start(Direction.LEFT);
         }
 
         await base.OnAfterRenderAsync(firstRender);

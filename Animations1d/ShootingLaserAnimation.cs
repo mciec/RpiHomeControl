@@ -101,6 +101,7 @@ internal class LaserBeam
     private static byte[] SinSqrLookup;
     private static byte[] CosLookup;
     private static byte[] CosSqrLookup;
+    private static (byte, byte, byte)[] ColourLookup;
 
     static LaserBeam()
     {
@@ -117,6 +118,17 @@ internal class LaserBeam
             CosLookup[i] = (byte)(Math.Cos(degree) * 127);
             CosSqrLookup[i] = (byte)(255 - SinSqrLookup[i]);
             degree += oneDegree;
+        }
+
+        ColourLookup = new (byte, byte, byte)[256];
+
+        for (int i = 0; i < 256; i++)
+        {
+            ColourLookup[i] = (
+                i < 70 ? (byte)(i * (256.0 / 70)) : i < 200 ? (byte)255 : (byte)255,    //(byte)(255 - (i - 200)),
+                i < 70 ? (byte)0 : i < 200 ? (byte)((i - 70.0) * (256.0 / (200.0 - 70.0))) : (byte)255, //(byte)(255 - (i - 200)),
+                i < 200 ? (byte)0 : (byte)((i - 200) * (255.0 / 55.0))
+                );
         }
 
     }
@@ -170,10 +182,11 @@ internal class LaserBeam
 
         double glowIntensity = GlowIntensity(intervalTillNow);
 
+
         return new RGB(
-            (byte)(glowIntensity * Color.R),
-            (byte)(glowIntensity * Color.G),
-            (byte)(glowIntensity * Color.B)
+            ColourLookup[(int)(glowIntensity * 255)].Item1,    //(glowIntensity * Color.R),
+            ColourLookup[(int)(glowIntensity * 255)].Item2,    //(byte)(glowIntensity * Color.G),
+            ColourLookup[(int)(glowIntensity * 255)].Item3     //(byte)(glowIntensity * Color.B)
             );
     }
 

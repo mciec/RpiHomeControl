@@ -3,6 +3,7 @@
     "http": {
       "commandName": "Project",
       "launchBrowser": true,
+      "launchUrl": "http://localhost:5227/animation",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       },

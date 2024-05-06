@@ -12,7 +12,7 @@ public sealed class WavesAnimation : AnimationBase
     private static byte[] SinSqrLookup;
     private static sbyte[] CosLookup;
     private static byte[] CosSqrLookup;
-
+    
     static WavesAnimation()
     {
         SinLookup = new sbyte[360];
@@ -29,7 +29,6 @@ public sealed class WavesAnimation : AnimationBase
             CosSqrLookup[i] = (byte)(255 - SinSqrLookup[i]);
             angle += oneDegree;
         }
-
     }
     private Wave[] Waves { get; set; }
 
@@ -99,6 +98,7 @@ internal class Wave
     private static byte[] SinSqrLookup;
     private static byte[] CosLookup;
     private static byte[] CosSqrLookup;
+    private static (byte, byte, byte)[] ColourLookup;
 
     static Wave()
     {
@@ -117,6 +117,16 @@ internal class Wave
             degree += oneDegree;
         }
 
+        ColourLookup = new (byte, byte, byte)[256];
+
+        for (int i = 0; i < 256; i++)
+        {
+            ColourLookup[i] = (
+                i < 70 ? (byte)(i * (256.0 / 70)) : i < 200 ? (byte)255 : (byte)255,    //(byte)(255 - (i - 200)),
+                i < 70 ? (byte)0 : i < 200 ? (byte)((i - 70.0) * (256.0 / (200.0 - 70.0))) : (byte)255, //(byte)(255 - (i - 200)),
+                i < 200 ? (byte)0 : (byte)((i - 200) * (255.0 / 55.0))
+                );
+        }
     }
 
     public RGB Color { get; set; }
@@ -131,25 +141,34 @@ internal class Wave
 
     public RGB TraceColor(int x, int version)
     {
-        var sin1 = Sinus(x * 23 - T * 5);
+        var sin1 = Sinus(x * 10 - T * 5);
         var sin2 = Sinus(x * 17 - (T * 0));
         var res1 = (byte)((sin1 * 255) >> 8);
 
-        sin1 = Sinus(x * 23 - T * 8);
+        sin1 = Sinus(x * 20 - T * 11);
         sin2 = Sinus(x * 13 - (T * 7));
         var res2 = (byte)((sin1 * 255) >> 8);
 
+        var pos = (Sinus(T * 5) >> 2) + 18;
+
         sin1 = Sinus(x * 7 - T * 7);
         sin2 = Sinus(x * 11 - (T * 13));
+        //var res3 = (byte)((sin1 * 255) >> 8);
+
+        //var res3 = (res1 + res2 < 255 ? 255 - res1 - res2 : 0);
         var res3 = (byte)((sin1 * 255) >> 8);
 
         var res4 = (res1 * res2) >> 8;
 
         return new RGB(
-            (byte)(version == 1 ? res1 : version == 2 ? res2 : version == 3 ? res3 : res4),
-            (byte)(0),
-            (byte)(0)
+            //(byte)(version == 1 || version == 4 ? res1 : 0),
+            //(byte)(version == 2 || version == 4 ? res2 : 0),
+            //(byte)(version == 3 || version == 4 ? res3 : 0)
+            ColourLookup[res1].Item1,
+            ColourLookup[res1].Item2,
+            ColourLookup[res1].Item3
             );
+
     }
 
     public void Initialize(int x0)

@@ -1,17 +1,17 @@
 ﻿.flexbox-container {
-    height: 600px;
+    height: 300px;
     border: 1px solid;
     border-color: red;
-    margin: 5px;
+    margin: 0px;
     background-color: yellow;
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    justify-content: space-around;
-    align-items: stretch;
-    align-content: space-evenly;
+    justify-content: left;
+    align-items: flex-start;
+    /*align-content: space-evenly;*/
 }
-
+6
 .flexbox-item {
     width: 200px;
     margin: 10px;
@@ -20,16 +20,18 @@
 }
 
 .flexbox-item-1 {
-    width: 300px;
+    width: 10%;
     min-height: 100px;
-    flex-shrink: 0
+    /*flex-shrink: 1;*/
+ /*   flex-grow: 1;*/
 }
 
 .flexbox-item-2 {
     min-height: 200px;
-    align-self: center;
+/*    flex-shrink: 0;*/
 }
 
 .flexbox-item-3 {
     min-height: 300px;
+    margin-left: auto;
 }
