@@ -103,7 +103,7 @@
                 }
 
                 await InvokeAsync(StateHasChanged);
-                await Task.Delay(40);
+                await Task.Delay(20);
 
             }
             if (ct.IsCancellationRequested)
@@ -122,7 +122,7 @@
             animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 1;
             AnimationFactory animationFactory = new AnimationFactory(animationsConfig, display);
             _animation = animationFactory.GetAnimation(typeof(TraceAnimation));
-            _animation.Start(Direction.LEFT);
+            _animation.Start(Direction.RIGHT);
 
             animationsConfig.Value.FlyingBallsAnimation.StaticBallsCount = 2;
             animationFactory = new AnimationFactory(animationsConfig, display2);

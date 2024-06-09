@@ -1,6 +1,7 @@
 ﻿using Animations1d.Display;
 using System.Drawing;
 using System.Numerics;
+using static Animations1d.TracedBall;
 
 namespace Animations1d;
 
@@ -35,11 +36,11 @@ public sealed class TraceAnimation : AnimationBase
 
     private TraceAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display) : base(display)
     {
-        _tracedBallsCount = 2;
+        _tracedBallsCount = 3;
         TracedBalls = new TracedBall[_tracedBallsCount];
         for (int i = 0; i < _tracedBallsCount; i++)
         {
-            TracedBalls[i] = new(x0: -1, v: 0, colorPalette: 0, viewPortSize: 0, dimmingPercent: 100, (oldX, t) => 0);
+            TracedBalls[i] = new(x: -1, v: 0, colorPalette: 0, viewPortSize: 0, dimmingPercent: 100, size: 1, (oldX, oldV, t) => (0, 0));
         }
     }
 
@@ -67,26 +68,39 @@ public sealed class TraceAnimation : AnimationBase
             {
                 switch (i)
                 {
-                    case 0: 
+                    case 0:
                         TracedBalls[i] = new TracedBall(
-                            x0: 0, 
-                            v: 5, 
-                            colorPalette: 1, 
-                            viewPortSize: Display.Width, 
-                            dimmingPercent: 70,
-                            (oldX, t) => 50 + (SinLookup[(t * 2) % 360] / 3) + (SinLookup[(t * 13) % 360] / 10)); 
-                        break;
-                    
-                    default:
-                        var randomV = Random.Shared.Next(2, 3);
-                        var colorPalette = Random.Shared.Next(0, 1);    // := 0 (fire)
-                        TracedBalls[i] = new TracedBall(
-                            x0: 0, 
-                            v: 5, 
-                            colorPalette: colorPalette, 
+                            x: Display.Width * 0.1,
+                            v: 0,
+                            colorPalette: 1,
                             viewPortSize: Display.Width,
                             dimmingPercent: 90,
-                            (oldX, t) => oldX + randomV); 
+                            size: 15,
+                            SpringFollowingSinus
+                            );
+                        break;
+                    case 1:
+                        TracedBalls[i] = new TracedBall(
+                            x:Display.Width * 0.9,
+                            v: 0,
+                            colorPalette: 1,
+                            viewPortSize: Display.Width,
+                            dimmingPercent: 90,
+                            size: 15,
+                            SpringFollowingSinus
+                            );
+                        break;
+                    default:
+                        var colorPalette = 0;
+                        TracedBalls[i] = new TracedBall(
+                            x: Direction == Direction.LEFT ? 0 : Display.Width,
+                            v: Direction == Direction.LEFT ? 9 : -9,
+                            colorPalette: colorPalette,
+                            viewPortSize: Display.Width,
+                            dimmingPercent: 95,
+                            size: 7,
+                            SlowingDownExp
+                            );
                         break;
                 }
             }
@@ -107,13 +121,29 @@ public sealed class TraceAnimation : AnimationBase
     }
     private int Sinus(int angle) => angle < 0 ? -SinLookup[-angle % 360] : SinLookup[angle % 360];
     private int SinusSqr(int angle) => SinSqrLookup[Math.Abs(angle) % 360];
+
+    static KinematicsFormula SpringFollowingSinus = (oldX, oldV, t) =>
+    {
+        var sinX = 50;  // + (SinLookup[(t * 3) % 360] / 3);
+        var f = sinX - oldX;
+        var v = oldV + f / 3000;
+        var x = oldX + v;
+        return (x, v);
+    };
+
+    static KinematicsFormula SlowingDownExp = (oldX, oldV, t) =>
+    {
+        var x = oldX + oldV;
+        var v = oldV * 0.93;
+        return (x, v);
+    };
 }
 
 internal class TracedBall
 {
     private int _t = 0;
     private const int dimmingPercent = 90;
-    private const int maxIntensity = 0xFFFFFF;
+    private const int maxIntensity_16 = 0xFFFFFF;
     private byte[] _intensityView;
 
     public RGB[] ColorView { get; private set; }
@@ -125,87 +155,81 @@ internal class TracedBall
     private static byte[] CosLookup;
     private static byte[] CosSqrLookup;
     private static (byte, byte, byte)[][] ColourLookup;
-
-    public int X0 { get; set; }
-    public int V { get; set; }
+    private readonly int Size = 5;
+    public double X { get; set; }
+    public double V { get; set; }
     public int ColorPalette { get; set; }
     public int ViewPortSize { get; }
     public int DimmingPercent { get; }
-    public int X { get; set; }
     public int T { get; private set; } = 0;
     public int Dir => V > 0 ? 1 : -1;
-    public delegate int NewXCalculator(int oldX, int t);
-    public readonly NewXCalculator _newXcalculator;
+    public delegate (double newX, double newV) KinematicsFormula(double oldX, double oldV, int t);
+    public readonly KinematicsFormula _kinematicsFormula;
 
-    public TracedBall(int x0, int v, int colorPalette, int viewPortSize, int dimmingPercent, NewXCalculator newXcalculator)
+    public TracedBall(double x, double v, int colorPalette, int viewPortSize, int dimmingPercent, int size, KinematicsFormula kiematicsFormula)
     {
-        X0 = x0;
+        X = x;
         V = v;
         ColorPalette = colorPalette;
         ViewPortSize = viewPortSize;
         DimmingPercent = dimmingPercent;
-        _newXcalculator = newXcalculator;
+        Size = size;
+        _kinematicsFormula = kiematicsFormula;
         _intensityView = new byte[viewPortSize];
     }
 
     public bool MoveBall()
     {
-        var oldx = X;
-        var x = _newXcalculator(X, ++T);
-        return MoveBall(x);
+        var (x, v) = _kinematicsFormula(X, V, ++T);
+        return MoveBall(x, v);
     }
-
-    public bool MoveBall(int newX)
+    public bool MoveBall(double newX, double newV)
     {
+        const double maxIntensity = 255.0;
+        double distFactor = Size * 0.3;
         IsBlank = DimIntensityView(DimmingPercent);
         var oldX = X;
-        var intensityAtOldX_16 = (maxIntensity * dimmingPercent) / 100;
-        var intensityAtNewX_16 = maxIntensity;
 
-        if (newX >= 0 && newX < _intensityView.Length)
+        var intensityAtOldX = (maxIntensity * dimmingPercent) / 100;
+        var intensityAtNewX = maxIntensity;
+        var step = (intensityAtNewX - intensityAtOldX) / (newX - oldX);
+
+        for (int i = 0; i < _intensityView.Length; i++)
         {
-            _intensityView[newX] = 255;
-            IsBlank = false;
-        }
+            var dist2 = (i - newX) * (i - newX);
+            var intensityFromGlow = dist2 == 0 ? maxIntensity : Math.Min(distFactor * maxIntensity / dist2, 255);
+            double intensityFromTrace;
 
-        if (newX != X)
-        {
-            var step_16 = Math.Abs((intensityAtNewX_16 - intensityAtOldX_16) / (newX - X));
-
-            oldX = X < 0 ? 0 : oldX >= _intensityView.Length ? _intensityView.Length - 1 : oldX;
-
-            intensityAtOldX_16 = (oldX - X) * step_16 + intensityAtOldX_16;
-
-            if (newX <= X)
+            //trace intensity calculation
+            if (oldX <= newX)
             {
-                var currVal_16 = intensityAtOldX_16;
-                for (int i = X - 1; i > newX; i--)
-                {
-                    currVal_16 += step_16;
-                    if (i < 0 || i >= _intensityView.Length)
-                        continue;
-                    _intensityView[i] = (byte)(currVal_16 >> 16);
-                    IsBlank &= _intensityView[i] == 0;
-                }
+                if (i < oldX || i > newX)
+                    intensityFromTrace = 0;
+                else
+                    intensityFromTrace = intensityAtOldX + (i - oldX) * step;
             }
             else
             {
-                var currVal_16 = intensityAtOldX_16;
-                for (int i = X + 1; i < newX; i++)
-                {
-                    currVal_16 += step_16;
-                    if (i < 0 || i >= _intensityView.Length)
-                        continue;
-                    _intensityView[i] = (byte)(currVal_16 >> 16);
-                    IsBlank &= _intensityView[i] == 0;
-                }
+                if (i < newX || i > oldX)
+                    intensityFromTrace = 0;
+                else
+                    intensityFromTrace = intensityAtOldX + (i - oldX) * step;
+            }
+
+            _intensityView[i] = Math.Max((byte)Math.Max(intensityFromGlow, intensityFromTrace), _intensityView[i]);
+
+            if (newX >= 0 && newX < _intensityView.Length)
+            {
+                IsBlank = false;
             }
         }
 
         X = newX;
+        V = newV;
         FlushColorView(ColorPalette);
         return IsBlank;
     }
+
 
     private bool DimIntensityView(int targetPercent)
     {
@@ -262,13 +286,16 @@ internal class TracedBall
                 i < 70 ? (byte)(i * (256.0 / 70)) : i < 200 ? (byte)255 : (byte)255,    //(byte)(255 - (i - 200)),
                 i < 70 ? (byte)0 : i < 200 ? (byte)((i - 70.0) * (256.0 / (200.0 - 70.0))) : (byte)255, //(byte)(255 - (i - 200)),
                 i < 200 ? (byte)0 : (byte)((i - 200) * (255.0 / 55.0))
+                //i < 100 ? (byte)(i * (255.0 / 100.0)) : i < 155 ? (byte)(255.0 - (i - 100.0) * 2.0) : i < 210 ? (byte)(145.0 + (i - 155.0) * 2.0) : (byte)255,
+                //i < 100 ? (byte)0 : i < 210 ? (byte)((i - 100.0) * (255.0 / 110.0)) : (byte)255,
+                //i < 230 ? (byte)0 : (byte)((i - 230.0) * (255.0 / 25.0))
                 );
 
             ColourLookup[1][i] = (
-                i < 200 ? (byte)0 : (byte)((i - 200) * (255.0 / 55.0)),
-                i < 70 ? (byte)0 : i < 200 ? (byte)((i - 70.0) * (256.0 / (200.0 - 70.0))) : (byte)255, //(byte)(255 - (i - 200)),
-                i < 70 ? (byte)(i * (256.0 / 70)) : i < 200 ? (byte)255 : (byte)255    //(byte)(255 - (i - 200)),
-                );
+                    i < 200 ? (byte)0 : (byte)((i - 200) * (255.0 / 55.0)),
+                    i < 70 ? (byte)0 : i < 200 ? (byte)((i - 70.0) * (256.0 / (200.0 - 70.0))) : (byte)255, //(byte)(255 - (i - 200)),
+                    i < 70 ? (byte)(i * (256.0 / 70)) : i < 200 ? (byte)255 : (byte)255    //(byte)(255 - (i - 200)),
+                    );
 
             ColourLookup[2][i] = (
                 i < 200 ? (byte)0 : (byte)((i - 200) * (255.0 / 55.0)),
@@ -277,4 +304,59 @@ internal class TracedBall
                 );
         }
     }
+
+    //public bool MoveBall(int newX, int newV_16)
+    //{
+    //    IsBlank = DimIntensityView(DimmingPercent);
+    //    var oldX = X;
+    //    var intensityAtOldX_16 = (maxIntensity_16 * dimmingPercent) / 100;
+    //    var intensityAtNewX_16 = maxIntensity_16;
+
+    //    if (newX >= 0 && newX < _intensityView.Length)
+    //    {
+    //        _intensityView[newX] = 255;
+    //        IsBlank = false;
+    //    }
+
+    //    if (newX != X)
+    //    {
+    //        var step_16 = Math.Abs((intensityAtNewX_16 - intensityAtOldX_16) / (newX - X));
+
+    //        oldX = X < 0 ? 0 : oldX >= _intensityView.Length ? _intensityView.Length - 1 : oldX;
+
+    //        intensityAtOldX_16 = (oldX - X) * step_16 + intensityAtOldX_16;
+
+    //        if (newX <= X)
+    //        {
+    //            var currVal_16 = intensityAtOldX_16;
+    //            for (int i = X - 1; i > newX; i--)
+    //            {
+    //                currVal_16 += step_16;
+    //                if (i < 0 || i >= _intensityView.Length)
+    //                    continue;
+    //                _intensityView[i] = (byte)(currVal_16 >> 16);
+    //                IsBlank &= _intensityView[i] == 0;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            var currVal_16 = intensityAtOldX_16;
+    //            for (int i = X + 1; i < newX; i++)
+    //            {
+    //                currVal_16 += step_16;
+    //                if (i < 0 || i >= _intensityView.Length)
+    //                    continue;
+    //                _intensityView[i] = (byte)(currVal_16 >> 16);
+    //                IsBlank &= _intensityView[i] == 0;
+    //            }
+    //        }
+    //    }
+
+    //    X = newX;
+    //    V = newV_16;
+    //    FlushColorView(ColorPalette);
+    //    return IsBlank;
+    //}
+
+
 }
