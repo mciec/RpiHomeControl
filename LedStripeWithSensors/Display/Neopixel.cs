@@ -1,4 +1,5 @@
-﻿using Iot.Device.Ws28xx;
+﻿using Animations1d.Display;
+using Iot.Device.Ws28xx;
 using Microsoft.Extensions.Options;
 using System.Device.Spi;
 

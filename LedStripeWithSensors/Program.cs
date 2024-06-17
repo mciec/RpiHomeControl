@@ -1,12 +1,14 @@
-﻿using Iot.Device.Ws28xx;
+﻿using Animations1d;
+using Animations1d.Display;
 using LedStripeWithSensors.AnimationManager;
-using LedStripeWithSensors.Animations;
 using LedStripeWithSensors.Display;
 using LedStripeWithSensors.MotionSensor;
 using LedStripeWithSensors.MqttManager;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NLog.Extensions.Logging;
 using System.Reflection;
 
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(args);
@@ -25,15 +27,30 @@ var mqttPaswword = builder.Configuration["MqttConfig:Password"];
 builder.Services.AddOptions<MqttClientConfig>().BindConfiguration("MqttConfig")
     .PostConfigure(config => { config.Password = mqttPaswword!; });
 builder.Services.AddOptions<MotionSensorsConfig>().BindConfiguration("MotionSensorsConfig");
-builder.Services.AddOptions<AnimationsConfig>().BindConfiguration("Animations");
+//builder.Services.AddOptions<AnimationsConfig>().BindConfiguration("Animations");
+builder.Services.AddOptions<FlyingBallsAnimationConfig>().BindConfiguration("Animations/FlyingBallsAnimation");
+
+
+
 builder.Services.AddOptions<NeopixelConfig>().BindConfiguration("Neopixel");
 builder.Services.AddOptions<AnimationManagerConfig>().BindConfiguration("Manager");
 
 builder.Services.AddScoped<AnimationFactory>();
+builder.Services.InjectAnimations();
+
 builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
 
-builder.Services.AddSingleton<IDisplay, Neopixel>();
+//builder.Services.AddSingleton<IDisplay, Neopixel>();
+builder.Services.AddSingleton<IDisplay, ConsoleDisplay>();
+
+builder.Services.AddLogging(loggingBuilder =>
+    {
+        loggingBuilder.ClearProviders();
+        loggingBuilder.SetMinimumLevel(LogLevel.Trace);
+        loggingBuilder.AddNLog(builder.Configuration);
+    });
+
 //builder.Services.AddSingleton(provider =>
 //    {
 //        SpiConnectionSettings settings = new(0, 0)

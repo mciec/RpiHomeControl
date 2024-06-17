@@ -1,7 +1,8 @@
 ﻿using LedStripeWithSensors.MqttManager;
 using Microsoft.Extensions.Options;
-using LedStripeWithSensors.Animations;
 using LedStripeWithSensors.MotionSensor;
+using Animations1d;
+using Microsoft.Extensions.Logging;
 
 namespace LedStripeWithSensors.AnimationManager;
 
@@ -26,6 +27,8 @@ internal sealed class AnimationManager
     private readonly IOptions<AnimationManagerConfig> _animationManagerConfig;
     private readonly AnimationFactory _animationFactory;
     private readonly MqttClient _mqttClient;
+    private readonly ILogger<AnimationManager> _logger;
+
     private bool MovementLeft { get; set; } = false;
     private bool MovementRight { get; set; } = false;
     private bool OverrideLeft { get; set; } = false;
@@ -34,7 +37,11 @@ internal sealed class AnimationManager
     private AnimationState State { get; set; } = AnimationState.Stopped;
     private DateTime AnimationStart { get; set; } = DateTime.Now;
 
-    public AnimationManager(IOptions<MotionSensorsConfig> motionSensorsConfig, IOptions<AnimationManagerConfig> animationManagerConfig, AnimationFactory animationFactory, MqttClient mqttClient)
+    public AnimationManager(IOptions<MotionSensorsConfig> motionSensorsConfig,
+        IOptions<AnimationManagerConfig> animationManagerConfig,
+        AnimationFactory animationFactory,
+        MqttClient mqttClient,
+        ILogger<AnimationManager> logger)
     {
         _leftMotionDetectorPin = motionSensorsConfig.Value.LeftMotionDetectorPin;
         _rightMotionDetectorPin = motionSensorsConfig.Value.RightMotionDetectorPin;
@@ -42,23 +49,42 @@ internal sealed class AnimationManager
         _switchOffDelayMs = animationManagerConfig.Value.SwitchOffDelaySec * 1000;
         _animationFactory = animationFactory;
         _mqttClient = mqttClient;
+        _logger = logger;
     }
 
     public async Task Run(CancellationToken ct)
     {
         DateTime now = DateTime.Now;
 
+        _logger.LogTrace("Started at {0}", now);
+
+
         using var motionDetectorLeft = MotionSensor.MotionSensor.CreateSensor(_leftMotionDetectorPin,
             () => MovementLeft = true,
             () => MovementLeft = false);
-        motionDetectorLeft.Run();
+
+        try
+        {
+            motionDetectorLeft.Run();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "LEFT motion detector disabled");
+        }
 
         using var motionDetectorRight = MotionSensor.MotionSensor.CreateSensor(_rightMotionDetectorPin,
             () => MovementRight = true,
             () => MovementRight = false);
-        motionDetectorRight.Run();
+        try
+        {
+            motionDetectorRight.Run();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "RIGHT motion detector disabled");
+        }
 
-        using var animation = _animationFactory.GetAnimation(typeof(FlyingBallsAnimation));
+        using var animation = _animationFactory.GetAnimation(typeof(TraceAnimation));
 
         _mqttClient.Connect(
             () => { OverrideLeft = true; OverrideRight = false; },
@@ -73,7 +99,7 @@ internal sealed class AnimationManager
             {
                 animation.Start(Direction.LEFT);
                 State = AnimationState.OverrideLeftRunning;
-                AnimationStart = now; ;
+                AnimationStart = now;
                 OverrideLeft = false;
             }
             else

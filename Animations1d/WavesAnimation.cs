@@ -1,4 +1,5 @@
 ﻿using Animations1d.Display;
+using Microsoft.Extensions.Logging;
 
 namespace Animations1d;
 
@@ -32,7 +33,7 @@ public sealed class WavesAnimation : AnimationBase
     }
     private Wave[] Waves { get; set; }
 
-    private WavesAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display) : base(display)
+    internal WavesAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger<WavesAnimation> logger) : base(display, logger)
     {
         //TODO: temporary
         _version = flyingBallsAnimationConfig.StaticBallsCount;
@@ -43,10 +44,10 @@ public sealed class WavesAnimation : AnimationBase
             Waves[i] = new();
     }
 
-    public static WavesAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display)
-    {
-        return new WavesAnimation(flyingBallsAnimationConfig, display);
-    }
+    //public static WavesAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger logger)
+    //{
+    //    return new WavesAnimation(flyingBallsAnimationConfig, display, logger);
+    //}
 
     public override void Dispose()
     {

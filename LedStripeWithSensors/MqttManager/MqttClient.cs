@@ -1,6 +1,8 @@
 ﻿using HiveMQtt.Client;
 using HiveMQtt.Client.Exceptions;
 using HiveMQtt.Client.Options;
+using Iot.Device.Common;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace LedStripeWithSensors.MqttManager;
@@ -13,12 +15,14 @@ internal sealed class MqttClient : IAsyncDisposable
     private const string MessageRight = "RIGHT";
 
     private readonly MqttClientConfig _config;
-    private HiveMQClient _client;
-    private ChannelManagerWithRecovery _channelManager;
+    private readonly ILogger<MqttClient> _logger;
+    private HiveMQClient _client = null!;
+    private ChannelManagerWithRecovery _channelManager = null!;
 
-    public MqttClient(IOptions<MqttClientConfig> config)
+    public MqttClient(IOptions<MqttClientConfig> config, ILogger<MqttClient> logger)
     {
         _config = config.Value;
+        _logger = logger;
         _allowReconnect = new SemaphoreSlim(1);
     }
 
@@ -31,7 +35,7 @@ internal sealed class MqttClient : IAsyncDisposable
             Port = _config.Port,
             UseTLS = _config.UseTLS,
             UserName = _config.User,
-            Password = _config.Password,
+            Password = _config.Password
         };
 
         _channelManager = ChannelManagerWithRecovery.StartConsumer(

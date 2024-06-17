@@ -1,6 +1,5 @@
 ﻿using Animations1d.Display;
-using System.Drawing;
-using System.Numerics;
+using Microsoft.Extensions.Logging;
 using static Animations1d.TracedBall;
 
 namespace Animations1d;
@@ -34,7 +33,7 @@ public sealed class TraceAnimation : AnimationBase
     }
     private TracedBall[] TracedBalls { get; set; }
 
-    private TraceAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display) : base(display)
+    public TraceAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger<TraceAnimation> logger) : base(display, logger)
     {
         _tracedBallsCount = 3;
         TracedBalls = new TracedBall[_tracedBallsCount];
@@ -44,10 +43,10 @@ public sealed class TraceAnimation : AnimationBase
         }
     }
 
-    public static TraceAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display)
-    {
-        return new TraceAnimation(flyingBallsAnimationConfig, display);
-    }
+    //public static TraceAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger logger)
+    //{
+    //    return new TraceAnimation(flyingBallsAnimationConfig, display, logger);
+    //}
 
     public override void Dispose()
     {
@@ -81,9 +80,9 @@ public sealed class TraceAnimation : AnimationBase
                         break;
                     case 1:
                         TracedBalls[i] = new TracedBall(
-                            x:Display.Width * 0.9,
+                            x: Display.Width * 0.9,
                             v: 0,
-                            colorPalette: 1,
+                            colorPalette: 2,
                             viewPortSize: Display.Width,
                             dimmingPercent: 90,
                             size: 15,

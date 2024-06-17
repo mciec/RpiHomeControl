@@ -1,10 +1,12 @@
 ﻿using Animations1d.Display;
+using Microsoft.Extensions.Logging;
 using System.Drawing;
 
 namespace Animations1d;
 
 public sealed class FlyingBallsAnimation : AnimationBase
 {
+    private readonly ILogger<FlyingBallsAnimation> _logger;
     private readonly int _staticBallsCount;
     private readonly int _movingBallsCount;
 
@@ -35,16 +37,17 @@ public sealed class FlyingBallsAnimation : AnimationBase
         }
     }
 
-    private FlyingBallsAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display) : base(display)
+    internal FlyingBallsAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger<FlyingBallsAnimation> logger) : base(display, logger)
     {
         _staticBallsCount = flyingBallsAnimationConfig.StaticBallsCount;
         _movingBallsCount = flyingBallsAnimationConfig.MovingBallsCount;
+        _logger = logger;
     }
 
-    public static FlyingBallsAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display)
-    {
-        return new FlyingBallsAnimation(flyingBallsAnimationConfig, display);
-    }
+    //public static FlyingBallsAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger logger)
+    //{
+    //    return new FlyingBallsAnimation(flyingBallsAnimationConfig, display, logger);
+    //}
 
     public override void Dispose()
     {

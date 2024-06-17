@@ -9,16 +9,28 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Content Remove="C:\Users\mciec\.nuget\packages\hivemqtt\0.6.0\contentFiles\any\net6.0\NLog.config" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="HiveMQtt" Version="0.6.0" />
     <PackageReference Include="Iot.Device.Bindings" Version="3.1.0" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Hosting" Version="8.0.0" />
+    <PackageReference Include="NLog.Extensions.Logging" Version="5.3.11" />
     <PackageReference Include="System.Device.Gpio" Version="3.1.0" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Animations1d\Animations1d.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="appSettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="nlog.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
   </ItemGroup>
