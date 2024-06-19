@@ -44,16 +44,7 @@ public class AnimationFactory
         }
         if (type == typeof(TraceAnimation))
         {
-            try
-            {
-                var y = _serviceProvider.GetService<FlyingBallsAnimationConfig>();
-                var x = _serviceProvider.GetKeyedService<IAnimation>("Trace");
-                return x;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "animation not found");
-            }
+            return _serviceProvider.GetKeyedService<IAnimation>("Trace");
         }
 
         throw new Exception($"Unknown IAnimation: {type.Name}");

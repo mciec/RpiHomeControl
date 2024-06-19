@@ -1,5 +1,6 @@
 ﻿using Animations1d.Display;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System.Drawing;
 
 namespace Animations1d;
@@ -37,10 +38,10 @@ public sealed class FlyingBallsAnimation : AnimationBase
         }
     }
 
-    internal FlyingBallsAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger<FlyingBallsAnimation> logger) : base(display, logger)
+    internal FlyingBallsAnimation(IOptions<FlyingBallsAnimationConfig> flyingBallsAnimationConfig, IDisplay display, ILogger<FlyingBallsAnimation> logger) : base(display, logger)
     {
-        _staticBallsCount = flyingBallsAnimationConfig.StaticBallsCount;
-        _movingBallsCount = flyingBallsAnimationConfig.MovingBallsCount;
+        _staticBallsCount = flyingBallsAnimationConfig.Value.StaticBallsCount;
+        _movingBallsCount = flyingBallsAnimationConfig.Value.MovingBallsCount;
         _logger = logger;
     }
 

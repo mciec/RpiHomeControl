@@ -1,5 +1,6 @@
 ﻿using Animations1d.Display;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static Animations1d.TracedBall;
 
 namespace Animations1d;
@@ -33,9 +34,9 @@ public sealed class TraceAnimation : AnimationBase
     }
     private TracedBall[] TracedBalls { get; set; }
 
-    public TraceAnimation(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger<TraceAnimation> logger) : base(display, logger)
+    public TraceAnimation(IOptions<FlyingBallsAnimationConfig> flyingBallsAnimationConfig, IDisplay display, ILogger<TraceAnimation> logger) : base(display, logger)
     {
-        _tracedBallsCount = 3;
+        _tracedBallsCount = flyingBallsAnimationConfig.Value.MovingBallsCount;
         TracedBalls = new TracedBall[_tracedBallsCount];
         for (int i = 0; i < _tracedBallsCount; i++)
         {

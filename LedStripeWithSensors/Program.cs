@@ -27,16 +27,15 @@ var mqttPaswword = builder.Configuration["MqttConfig:Password"];
 builder.Services.AddOptions<MqttClientConfig>().BindConfiguration("MqttConfig")
     .PostConfigure(config => { config.Password = mqttPaswword!; });
 builder.Services.AddOptions<MotionSensorsConfig>().BindConfiguration("MotionSensorsConfig");
-//builder.Services.AddOptions<AnimationsConfig>().BindConfiguration("Animations");
-builder.Services.AddOptions<FlyingBallsAnimationConfig>().BindConfiguration("Animations/FlyingBallsAnimation");
 
-
+builder.Services.AddOptions<AnimationsConfig>().BindConfiguration("Animations");
+builder.Services.AddOptions<FlyingBallsAnimationConfig>().BindConfiguration("Animations:FlyingBallsAnimation");
 
 builder.Services.AddOptions<NeopixelConfig>().BindConfiguration("Neopixel");
 builder.Services.AddOptions<AnimationManagerConfig>().BindConfiguration("Manager");
 
 builder.Services.AddScoped<AnimationFactory>();
-builder.Services.InjectAnimations();
+builder.Services.AddAnimations();
 
 builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
