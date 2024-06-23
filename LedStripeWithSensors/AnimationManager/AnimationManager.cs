@@ -107,13 +107,13 @@ internal sealed class AnimationManager
             { 
                 OverrideLeft = true; 
                 OverrideRight = false;
-                _logger.LogInformation("Override signal: {diretion}", "LEFT");
+                _logger.LogInformation("Override signal: {direction}", "LEFT");
             },
             () => 
             { 
                 OverrideRight = true; 
                 OverrideLeft = false;
-                _logger.LogInformation("Override signal: {diretion}", "RIGHT");
+                _logger.LogInformation("Override signal: {direction}", "RIGHT");
             },
             ct);
 

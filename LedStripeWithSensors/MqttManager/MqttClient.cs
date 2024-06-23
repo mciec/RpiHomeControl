@@ -15,13 +15,14 @@ internal sealed class MqttClient : IAsyncDisposable
     private const string MessageRight = "RIGHT";
 
     private readonly MqttClientConfig _config;
+    private readonly ChannelManagerWithRecovery _channelManagerWithRecovery;
     private readonly ILogger<MqttClient> _logger;
     private HiveMQClient _client = null!;
-    private ChannelManagerWithRecovery _channelManager = null!;
 
-    public MqttClient(IOptions<MqttClientConfig> config, ILogger<MqttClient> logger)
+    public MqttClient(IOptions<MqttClientConfig> config, ChannelManagerWithRecovery channelManagerWithRecovery, ILogger<MqttClient> logger)
     {
         _config = config.Value;
+        _channelManagerWithRecovery = channelManagerWithRecovery;
         _logger = logger;
         _allowReconnect = new SemaphoreSlim(1);
     }
@@ -38,7 +39,7 @@ internal sealed class MqttClient : IAsyncDisposable
             Password = _config.Password
         };
 
-        _channelManager = ChannelManagerWithRecovery.StartConsumer(
+        _channelManagerWithRecovery.StartConsumer(
             recoveryAsyncFunc: async (CancellationToken ct) => await ReconnectAsync().ConfigureAwait(false),
             maxAttempts: 0,
             ct);
@@ -69,13 +70,14 @@ internal sealed class MqttClient : IAsyncDisposable
 
     public void Send(string msg)
     {
-        if (_channelManager is null)
+        if (_channelManagerWithRecovery is null)
             throw new Exception("Channel manager not created");
 
-        _channelManager.Send(new ExpiratingAsyncDelegate()
+        _channelManagerWithRecovery.Send(new ExpiratingAsyncDelegate()
         {
             Delegate = async (CancellationToken ct) =>
             {
+                _logger.LogInformation("Sending message: {message} to topic: {topic}", msg, _config.MotionDetectedTopic);
                 var result = await _client.PublishAsync(_config.MotionDetectedTopic, msg).ConfigureAwait(false);
                 return true;
             },
@@ -135,7 +137,7 @@ internal sealed class MqttClient : IAsyncDisposable
             if (maxAttempts != 0 && attemptNo >= maxAttempts)
                 return false;
 
-            await Task.Delay(delayMs).ConfigureAwait(false);
+            await Task.Delay(delayMs, ct).ConfigureAwait(false);
 
             delayMs = Math.Min(delayMs * 2, 60_000);
         }

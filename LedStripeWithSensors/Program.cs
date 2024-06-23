@@ -39,6 +39,7 @@ builder.Services.AddAnimations();
 
 builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
+builder.Services.AddSingleton<ChannelManagerWithRecovery>();
 
 //builder.Services.AddSingleton<IDisplay, Neopixel>();
 builder.Services.AddSingleton<IDisplay, ConsoleDisplay>();

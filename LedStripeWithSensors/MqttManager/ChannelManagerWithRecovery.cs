@@ -1,32 +1,36 @@
-﻿using System.Threading.Channels;
+﻿using Microsoft.Extensions.Logging;
+using System.Threading.Channels;
 
 namespace LedStripeWithSensors.MqttManager;
 
 internal sealed class ChannelManagerWithRecovery
 {
-    private readonly Func<CancellationToken, ValueTask<bool>> _recoveryFunc;
-    private readonly int _maxAttempts;
     private readonly Channel<IExpiratingAsyncDelegate> _expiratingDelegateChannel;
+    private readonly ILogger<ChannelManagerWithRecovery> _logger;
+    private Func<CancellationToken, ValueTask<bool>> _recoveryFunc;
+    private int _maxAttempts;
 
-    private ChannelManagerWithRecovery(Func<CancellationToken, ValueTask<bool>> recoveryFunc, int maxAttempts)
+    public ChannelManagerWithRecovery(ILogger<ChannelManagerWithRecovery> logger)
     {
-        _recoveryFunc = recoveryFunc;
-        _maxAttempts = maxAttempts;
+        _logger = logger;
         _expiratingDelegateChannel = Channel.CreateUnbounded<IExpiratingAsyncDelegate>();
     }
 
-    public static ChannelManagerWithRecovery StartConsumer(Func<CancellationToken, ValueTask<bool>> recoveryAsyncFunc, int maxAttempts, CancellationToken ct = default)
+    public ChannelManagerWithRecovery StartConsumer(Func<CancellationToken, ValueTask<bool>> recoveryAsyncFunc, int maxAttempts, CancellationToken ct = default)
     {
-        var channelManager = new ChannelManagerWithRecovery(recoveryAsyncFunc, maxAttempts);
+        _maxAttempts = maxAttempts;
+        _recoveryFunc = recoveryAsyncFunc;
         var consumerTask = Task.Run(async () =>
         {
             while (!ct.IsCancellationRequested)
             {
-                var expiratingDelegate = await channelManager._expiratingDelegateChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
-                await channelManager.ConsumeWithRecovery(expiratingDelegate, ct).ConfigureAwait(false);
+                var expiratingDelegate = await _expiratingDelegateChannel.Reader.ReadAsync(ct).ConfigureAwait(false);
+                await ConsumeWithRecovery(expiratingDelegate, ct).ConfigureAwait(false);
             }
         }, ct);
-        return channelManager;
+        _logger.LogInformation("Consumer started");
+
+        return this;
     }
 
     public bool Send(IExpiratingAsyncDelegate expiratingDelegate)
@@ -74,6 +78,7 @@ internal sealed class ChannelManagerWithRecovery
             catch (Exception ex)
             {
                 attemptNo++;
+                _logger.LogError(ex, "Error in expirating delegate. Attempt {attempt} / {maxAttempts}", attemptNo, _maxAttempts);
             }
 
             await Task.Delay(delayMs, ct).ConfigureAwait(false);
