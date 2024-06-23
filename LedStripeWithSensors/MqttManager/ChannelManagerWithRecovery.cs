@@ -47,10 +47,11 @@ internal sealed class ChannelManagerWithRecovery
         {
             try
             {
-                if (expiratingDelegate.ExpirationDate > DateTime.Now)
+                var now = DateTime.UtcNow;
+
+                if (expiratingDelegate.ExpirationDate < now)
                     return;
 
-                var now = DateTime.UtcNow;
                 var timeLeftMs = expiratingDelegate.ExpirationDate == null
                     ? 0
                     : (int)(expiratingDelegate.ExpirationDate.Value - now).TotalMilliseconds;
@@ -72,7 +73,6 @@ internal sealed class ChannelManagerWithRecovery
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex);
                 attemptNo++;
             }
 

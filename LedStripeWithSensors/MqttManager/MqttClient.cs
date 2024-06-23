@@ -40,7 +40,7 @@ internal sealed class MqttClient : IAsyncDisposable
 
         _channelManager = ChannelManagerWithRecovery.StartConsumer(
             recoveryAsyncFunc: async (CancellationToken ct) => await ReconnectAsync().ConfigureAwait(false),
-            maxAttempts: 0, 
+            maxAttempts: 0,
             ct);
 
         _client = new HiveMQClient(options);
@@ -106,11 +106,11 @@ internal sealed class MqttClient : IAsyncDisposable
         }
         catch (HiveMQttClientException ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex, "Reconnecting failed");
         }
         catch (Exception ex)
         {
-            Console.WriteLine(ex.Message);
+            _logger.LogError(ex, "Reconnecting failed");
         }
         finally
         {

@@ -11,42 +11,28 @@ public class AnimationFactory
     private readonly IOptions<AnimationsConfig> _animationsConfig;
     private readonly IDisplay _display;
     private readonly ILogger<AnimationFactory> _logger;
+    private readonly IEnumerable<IAnimation> _animations;
 
-    public AnimationFactory(IServiceProvider serviceProvider, IOptions<AnimationsConfig> animationsConfig, IDisplay display, ILogger<AnimationFactory> logger)
+    public AnimationFactory(
+        IServiceProvider serviceProvider, 
+        IOptions<AnimationsConfig> animationsConfig, 
+        IDisplay display, 
+        ILogger<AnimationFactory> logger,
+        IEnumerable<IAnimation> animations)
     {
         _serviceProvider = serviceProvider;
         _animationsConfig = animationsConfig;
         _display = display;
         _logger = logger;
+        _animations = animations;
     }
 
     public IAnimation GetAnimation(Type type)
     {
-        //if (type == typeof(FlyingBallsAnimation))
-        //{
-        //    return FlyingBallsAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display, _logger);
-        //}
-        //if (type == typeof(WavesAnimation))
-        //{
-        //    return WavesAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display, _logger);
-        //}
-        //if (type == typeof(TraceAnimation))
-        //{
-        //    return TraceAnimation.Create(_animationsConfig.Value.FlyingBallsAnimation, _display, _logger);
-        //}
-        if (type == typeof(FlyingBallsAnimation))
-        {
-            return _serviceProvider.GetKeyedService<IAnimation>("FlyingBalls");
-        }
-        if (type == typeof(WavesAnimation))
-        {
-            return _serviceProvider.GetKeyedService<IAnimation>("Waves");
-        }
-        if (type == typeof(TraceAnimation))
-        {
-            return _serviceProvider.GetKeyedService<IAnimation>("Trace");
-        }
+        var animation = _animations.FirstOrDefault(anim => anim.GetType() == type);
+        if (animation == null)
+            throw new Exception($"Unknow IAnimation: {type.Name}");
 
-        throw new Exception($"Unknown IAnimation: {type.Name}");
+        return animation;
     }
 }

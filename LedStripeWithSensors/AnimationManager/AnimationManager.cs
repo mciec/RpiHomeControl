@@ -56,12 +56,20 @@ internal sealed class AnimationManager
     {
         DateTime now = DateTime.Now;
 
-        _logger.LogTrace("Started at {0}", now);
+        _logger.LogTrace("Started at {startTime}", now);
 
 
         using var motionDetectorLeft = MotionSensor.MotionSensor.CreateSensor(_leftMotionDetectorPin,
-            () => MovementLeft = true,
-            () => MovementLeft = false);
+            () => 
+            {
+                MovementLeft = true;
+                _logger.LogInformation("Motion detected: {direction}", "LEFT");
+            },
+            () =>
+            {
+                MovementLeft = false;
+                _logger.LogInformation("Motion stopped: {direction}", "LEFT");
+            });
 
         try
         {
@@ -73,8 +81,16 @@ internal sealed class AnimationManager
         }
 
         using var motionDetectorRight = MotionSensor.MotionSensor.CreateSensor(_rightMotionDetectorPin,
-            () => MovementRight = true,
-            () => MovementRight = false);
+            () =>
+            {
+                MovementRight = true;
+                _logger.LogInformation("Motion detected: {direction}", "RIGHT");
+            },
+            () =>
+            {
+                MovementRight = false;
+                _logger.LogInformation("Motion stopped: {direction}", "RIGHT");
+            });
         try
         {
             motionDetectorRight.Run();
@@ -87,8 +103,18 @@ internal sealed class AnimationManager
         using var animation = _animationFactory.GetAnimation(typeof(TraceAnimation));
 
         _mqttClient.Connect(
-            () => { OverrideLeft = true; OverrideRight = false; },
-            () => { OverrideRight = true; OverrideLeft = false; },
+            () => 
+            { 
+                OverrideLeft = true; 
+                OverrideRight = false;
+                _logger.LogInformation("Override signal: {diretion}", "LEFT");
+            },
+            () => 
+            { 
+                OverrideRight = true; 
+                OverrideLeft = false;
+                _logger.LogInformation("Override signal: {diretion}", "RIGHT");
+            },
             ct);
 
         while (!ct.IsCancellationRequested)

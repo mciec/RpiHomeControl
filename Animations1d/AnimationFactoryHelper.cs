@@ -6,10 +6,9 @@ public static class AnimationFactoryHelper
 {
     public static IServiceCollection AddAnimations(this IServiceCollection services)
     {
-        services.AddKeyedSingleton<IAnimation, FlyingBallsAnimation>("FlyingBalls");
-        services.AddKeyedSingleton<IAnimation, TraceAnimation>("Trace");
-        services.AddKeyedSingleton<IAnimation, WavesAnimation>("Waves");
-
+        services.AddSingleton<IAnimation, FlyingBallsAnimation>();
+        services.AddSingleton<IAnimation, TraceAnimation>();
+        services.AddSingleton<IAnimation, WavesAnimation>();
         return services;
     }
 }

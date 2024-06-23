@@ -44,11 +44,6 @@ public sealed class TraceAnimation : AnimationBase
         }
     }
 
-    //public static TraceAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger logger)
-    //{
-    //    return new TraceAnimation(flyingBallsAnimationConfig, display, logger);
-    //}
-
     public override void Dispose()
     {
         Console.WriteLine($"TraceAnimation disposed");

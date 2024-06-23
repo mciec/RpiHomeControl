@@ -38,17 +38,12 @@ public sealed class FlyingBallsAnimation : AnimationBase
         }
     }
 
-    internal FlyingBallsAnimation(IOptions<FlyingBallsAnimationConfig> flyingBallsAnimationConfig, IDisplay display, ILogger<FlyingBallsAnimation> logger) : base(display, logger)
+    public FlyingBallsAnimation(IOptions<FlyingBallsAnimationConfig> flyingBallsAnimationConfig, IDisplay display, ILogger<FlyingBallsAnimation> logger) : base(display, logger)
     {
         _staticBallsCount = flyingBallsAnimationConfig.Value.StaticBallsCount;
         _movingBallsCount = flyingBallsAnimationConfig.Value.MovingBallsCount;
         _logger = logger;
     }
-
-    //public static FlyingBallsAnimation Create(FlyingBallsAnimationConfig flyingBallsAnimationConfig, IDisplay display, ILogger logger)
-    //{
-    //    return new FlyingBallsAnimation(flyingBallsAnimationConfig, display, logger);
-    //}
 
     public override void Dispose()
     {
