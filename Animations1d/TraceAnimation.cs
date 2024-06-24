@@ -117,21 +117,21 @@ public sealed class TraceAnimation : AnimationBase
     private int Sinus(int angle) => angle < 0 ? -SinLookup[-angle % 360] : SinLookup[angle % 360];
     private int SinusSqr(int angle) => SinSqrLookup[Math.Abs(angle) % 360];
 
-    static KinematicsFormula SpringFollowingSinus = (oldX, oldV, t) =>
+    private (double newX, double newV) SpringFollowingSinus(double oldX, double oldV, int t)
     {
-        var sinX = 50;  // + (SinLookup[(t * 3) % 360] / 3);
+        var sinX = Display.Width / 2;  // + (SinLookup[(t * 3) % 360] / 3);
         var f = sinX - oldX;
         var v = oldV + f / 3000;
         var x = oldX + v;
         return (x, v);
-    };
+    }
 
-    static KinematicsFormula SlowingDownExp = (oldX, oldV, t) =>
+    private (double newX, double newV) SlowingDownExp(double oldX, double oldV, int t)
     {
         var x = oldX + oldV;
         var v = oldV * 0.93;
         return (x, v);
-    };
+    }
 }
 
 internal class TracedBall

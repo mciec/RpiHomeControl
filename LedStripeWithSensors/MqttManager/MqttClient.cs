@@ -60,6 +60,7 @@ internal sealed class MqttClient : IAsyncDisposable
 
         _client.AfterDisconnect += async (sender, args) =>
         {
+            _logger.LogError("MQTT client disconnected.");
             await ReconnectWithRetryAsync(0, ct).ConfigureAwait(false);
         };
 
@@ -87,23 +88,41 @@ internal sealed class MqttClient : IAsyncDisposable
 
     private async ValueTask<bool> ReconnectAsync()
     {
-        if (_client.IsConnected())
-            return true;
-
-        if (!await _allowReconnect.WaitAsync(1000).ConfigureAwait(false))
-            return false;
-
         try
         {
+            if (!await _allowReconnect.WaitAsync(1000).ConfigureAwait(false))
+            {
+                _logger.LogInformation("Semaphore is taken.");
+                return false;
+            }
+
+            _logger.LogInformation("Inside semaphore");
+
+            if (_client.IsConnected())
+            {
+                _logger.LogInformation("Already connected");
+                return true;
+            }
+
+            _logger.LogInformation("Trying to connect...");
             var connectResult = await _client.ConnectAsync().ConfigureAwait(false);
             if (connectResult.ReasonCode == HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
             {
+                _logger.LogInformation("Connected. Unsubscribing...");
                 foreach (var sub in _client.Subscriptions)
                 {
                     await _client.UnsubscribeAsync(sub).ConfigureAwait(false);
                 }
+                _logger.LogInformation("Unsubscribed. Subscribing...");
                 var subscribeResult = await _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
-                return subscribeResult != null;
+                _logger.LogInformation("Subscribed. SubscribeResult: {subscribeResult}", subscribeResult);
+
+                var result = subscribeResult != null;
+
+                if (result)
+                    _logger.LogInformation("Reconnecting and subscribing succeeded");
+
+                return result;
             }
         }
         catch (HiveMQttClientException ex)
@@ -117,6 +136,7 @@ internal sealed class MqttClient : IAsyncDisposable
         finally
         {
             _allowReconnect.Release();
+            _logger.LogInformation("Semaphore left");
         }
         return false;
     }

@@ -1,4 +1,6 @@
-﻿namespace Animations1d;
+﻿using Animations1d.Display;
+
+namespace Animations1d;
 
 public enum Direction
 {
@@ -12,4 +14,5 @@ public interface IAnimation : IDisposable
     void NextFrame();
     void Stop();
     void Start(Direction direction);
+    IDisplay Display { get; }
 }

@@ -1,5 +1,5 @@
 ssh mciec@192.168.8.20 pkill -f 'LedStripeWithSensors.dll'
-ssh mciec@192.168.8.20 rm -f -r -d ~/projects/LedStripeWithSensors
+ssh mciec@192.168.8.20 rm ~/projects/LedStripeWithSensors -f -r -d 
 ssh mciec@192.168.8.20 mkdir ~/projects
 ssh mciec@192.168.8.20 mkdir ~/projects/LedStripeWithSensors
 scp -r bin\Debug\net8.0\publish\linux-arm64\* mciec@192.168.8.20:~/projects/LedStripeWithSensors

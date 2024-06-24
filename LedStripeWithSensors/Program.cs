@@ -41,8 +41,8 @@ builder.Services.AddSingleton<MqttClient>();
 builder.Services.AddSingleton<AnimationManager>();
 builder.Services.AddSingleton<ChannelManagerWithRecovery>();
 
-//builder.Services.AddSingleton<IDisplay, Neopixel>();
-builder.Services.AddSingleton<IDisplay, ConsoleDisplay>();
+builder.Services.AddSingleton<IDisplay, Neopixel>();
+//builder.Services.AddSingleton<IDisplay, ConsoleDisplay>();
 
 builder.Services.AddLogging(loggingBuilder =>
     {
@@ -50,23 +50,6 @@ builder.Services.AddLogging(loggingBuilder =>
         loggingBuilder.SetMinimumLevel(LogLevel.Trace);
         loggingBuilder.AddNLog(builder.Configuration);
     });
-
-//builder.Services.AddSingleton(provider =>
-//    {
-//        SpiConnectionSettings settings = new(0, 0)
-//        {
-//            ClockFrequency = 2_400_000,
-//            Mode = SpiMode.Mode0,
-//            DataBitLength = 8
-//        };
-
-//        var spi = SpiDevice.Create(settings);
-//        var neopixelConfig = provider.GetService<IOptions<NeopixelConfig>>();
-//        if (neopixelConfig is null)
-//            throw new Exception("NeopixelConfig not available");
-//        var ws2812B = new Ws2812b(spi, neopixelConfig.Value.Width);
-//        return ws2812B;
-//    });
 
 using IHost host = builder.Build();
 

@@ -100,7 +100,7 @@ internal sealed class AnimationManager
             _logger.LogError(ex, "RIGHT motion detector disabled");
         }
 
-        using var animation = _animationFactory.GetAnimation(typeof(TraceAnimation));
+        using var animation = _animationFactory.GetAnimation(typeof(FlyingBallsAnimation));
 
         _mqttClient.Connect(
             () => 
