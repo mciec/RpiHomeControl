@@ -19,19 +19,19 @@ public abstract class AnimationBase : IAnimation
 
     public void Stop()
     {
+        _logger.LogInformation("STOP: animation {animationType} from {direction}", GetType().Name, Direction);
         Direction = Direction.NONE;
         FrameNumber = 0;
         Display.Reset();
         if (_verbose) PrintStatus();
-        _logger.LogInformation("STOP: animation {animationType}", GetType().Name);
     }
 
     public void Start(Direction direction)
     {
+        _logger.LogInformation("START: animation {animationType} from {direction}", GetType().Name, direction);
         Direction = direction;
         FrameNumber = 0;
         if (_verbose) PrintStatus();
-        _logger.LogInformation("START: animation {animationType}", GetType().Name);
     }
 
     public void NextFrame()
