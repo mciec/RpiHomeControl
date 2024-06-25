@@ -36,9 +36,9 @@ internal sealed class Neopixel : IDisplay
     {
         for (int i = 0; i < Width; i++)
         {
-            _ws2812B.Image.SetPixel(i, 0, System.Drawing.Color.FromArgb(Matrix[i].R, Matrix[i].G, Matrix[i].B));
-            _ws2812B.Update();
+            _ws2812B.Image.SetPixel(i, 0, System.Drawing.Color.FromArgb((int)Matrix[i].R, (int)Matrix[i].G, (int)Matrix[i].B));
         }
+        _ws2812B.Update();
     }
 
     public void Reset()
@@ -46,7 +46,7 @@ internal sealed class Neopixel : IDisplay
         for (int i = 0; i < Width; i++)
         {
             _ws2812B.Image.SetPixel(i, 0, System.Drawing.Color.FromArgb(0, 0, 0));
-            _ws2812B.Update();
         }
+        _ws2812B.Update();
     }
 }

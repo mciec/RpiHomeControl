@@ -118,7 +118,6 @@ public sealed class FlyingBallsAnimation : AnimationBase
         for (int i = 0; i < Display.Width; i++)
         {
             Display.Matrix[i] = new RGB() { R = (byte)movingSinus1[i], G = (byte)movingSinus1[i], B = (byte)movingSinus1[i] };
-            Display.Flush();
         }
     }
 
