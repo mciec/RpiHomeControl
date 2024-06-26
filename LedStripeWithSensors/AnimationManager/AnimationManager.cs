@@ -30,6 +30,7 @@ internal sealed class AnimationManager
     private readonly bool _verbose = false;
     private readonly int _frameDurationMs;
     private readonly int _switchOffDelayMs;
+    private readonly bool _dontRunAtDaylight;
     private readonly int _leftMotionDetectorPin;
     private readonly int _rightMotionDetectorPin;
     private readonly IOptions<AnimationManagerConfig> _animationManagerConfig;
@@ -55,6 +56,7 @@ internal sealed class AnimationManager
         _rightMotionDetectorPin = motionSensorsConfig.Value.RightMotionDetectorPin;
         _frameDurationMs = animationManagerConfig.Value.FrameDurationMs;
         _switchOffDelayMs = animationManagerConfig.Value.SwitchOffDelaySec * 1000;
+        _dontRunAtDaylight = animationManagerConfig.Value.DontRunAtDaylight;
         _animationFactory = animationFactory;
         _mqttClient = mqttClient;
         _logger = logger;
@@ -70,7 +72,7 @@ internal sealed class AnimationManager
         using var motionDetectorLeft = MotionSensor.MotionSensor.CreateSensor(_leftMotionDetectorPin,
             () =>
             {
-                if (DayLight(DateTime.Now))
+                if (IgnoreDetectedMovement())
                 {
                     _logger.LogInformation("Motion detected: {direction}, but it's daylight at {time}", "LEFT", DateTime.Now.ToShortTimeString());
                     return;
@@ -86,7 +88,7 @@ internal sealed class AnimationManager
 
         try
         {
-            motionDetectorLeft.Run();
+            motionDetectorLeft.Run(ct);
         }
         catch (Exception ex)
         {
@@ -96,7 +98,7 @@ internal sealed class AnimationManager
         using var motionDetectorRight = MotionSensor.MotionSensor.CreateSensor(_rightMotionDetectorPin,
             () =>
             {
-                if (DayLight(DateTime.Now))
+                if (IgnoreDetectedMovement())
                 {
                     _logger.LogInformation("Motion detected: {direction}, but it's daylight at {time}", "RIGHT", DateTime.Now.ToShortTimeString());
                     return;
@@ -111,7 +113,7 @@ internal sealed class AnimationManager
             });
         try
         {
-            motionDetectorRight.Run();
+            motionDetectorRight.Run(ct);
         }
         catch (Exception ex)
         {
@@ -205,11 +207,22 @@ internal sealed class AnimationManager
         }
     }
 
-    private static bool DayLight(DateTime dateTime)
+    private static bool IsDayLight(DateTime dateTime)
     {
         var month = dateTime.Month;
         var sunrise = SunriseByMonth[month - 1].ToTimeSpan();
         var sunset = SunsetByMonth[month - 1].ToTimeSpan();
         return dateTime.TimeOfDay >= sunrise && dateTime.TimeOfDay <= sunset;
+    }
+
+    private bool IgnoreDetectedMovement()
+    {
+        if (!_dontRunAtDaylight)
+            return false;
+
+        if (IsDayLight(DateTime.Now))
+            return true;
+
+        return false;
     }
 }

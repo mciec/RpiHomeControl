@@ -115,7 +115,7 @@ internal sealed class MqttClient : IAsyncDisposable
                 }
                 _logger.LogInformation("Unsubscribed. Subscribing...");
                 var subscribeResult = await _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
-                _logger.LogInformation("Subscribed. Subscribtions' count: {count}", subscribeResult?.Subscriptions.Count);
+                _logger.LogInformation("Subscribed. Subscription count: {count}", subscribeResult?.Subscriptions.Count);
 
                 var result = subscribeResult != null;
 

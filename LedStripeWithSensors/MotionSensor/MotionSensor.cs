@@ -9,6 +9,7 @@ internal sealed class MotionSensor : IDisposable
     private readonly PinChangeEventHandler _onMotionOn;
     private readonly PinChangeEventHandler _onMotionOff;
     private GpioController _gpioController = null;
+    private Task _fallbackStateReadingTask = null!;
 
     private MotionSensor(int gpio, Action onMotionOn, Action onMotionOff)
     {
@@ -17,8 +18,11 @@ internal sealed class MotionSensor : IDisposable
         _onMotionOff = (sender, args) => onMotionOff();
     }
 
-    public void Run()
+    public async void Run(CancellationToken cancellationToken)
     {
+        if (_fallbackStateReadingTask != null)
+            throw new InvalidOperationException("This motion sensor is already active");
+
         _gpioController = new GpioController();
         _gpioController.OpenPin(_gpio, PinMode.InputPullDown);
 
@@ -33,6 +37,26 @@ internal sealed class MotionSensor : IDisposable
             PinEventTypes.Falling,
             _onMotionOff
             );
+
+        _fallbackStateReadingTask = new Task(
+            async () =>
+            {
+                while (!cancellationToken.IsCancellationRequested)
+                {
+                    var pinValue = _gpioController.Read(_gpio);
+                    if (pinValue == PinValue.High)
+                    {
+                        _onMotionOn.Invoke(this, new PinValueChangedEventArgs(PinEventTypes.None, _gpio));
+                    }
+                    else
+                    {
+                        _onMotionOff.Invoke(this, new PinValueChangedEventArgs(PinEventTypes.None, _gpio));
+                    }
+                    await Task.Delay(10000);
+                }
+            },
+            cancellationToken,
+            TaskCreationOptions.LongRunning | TaskCreationOptions.PreferFairness);
     }
 
     public static MotionSensor CreateSensor(int gpio, Action onMotionOn, Action onMotionOff)
