@@ -115,7 +115,7 @@ internal sealed class MqttClient : IAsyncDisposable
                 }
                 _logger.LogInformation("Unsubscribed. Subscribing...");
                 var subscribeResult = await _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
-                _logger.LogInformation("Subscribed. SubscribeResult: {subscribeResult}", subscribeResult);
+                _logger.LogInformation("Subscribed. Subscribtions' count: {count}", subscribeResult?.Subscriptions.Count);
 
                 var result = subscribeResult != null;
 
@@ -124,6 +124,7 @@ internal sealed class MqttClient : IAsyncDisposable
 
                 return result;
             }
+            _logger.LogError("Not connected ({reasonCode} - {reasonString}): {responseInformation}", connectResult.ReasonCode, connectResult.ReasonString, connectResult.ResponseInformation);
         }
         catch (HiveMQttClientException ex)
         {

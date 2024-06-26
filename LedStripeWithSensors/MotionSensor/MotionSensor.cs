@@ -4,6 +4,7 @@ namespace LedStripeWithSensors.MotionSensor;
 
 internal sealed class MotionSensor : IDisposable
 {
+
     private readonly int _gpio;
     private readonly PinChangeEventHandler _onMotionOn;
     private readonly PinChangeEventHandler _onMotionOff;

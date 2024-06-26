@@ -17,6 +17,14 @@ internal enum AnimationState
 
 internal sealed class AnimationManager
 {
+    private static List<TimeOnly> SunriseByMonth = new() {
+        TimeOnly.Parse("07:36"), TimeOnly.Parse("06:50"), TimeOnly.Parse("05:47"), TimeOnly.Parse("05:35"), TimeOnly.Parse("04:38"), TimeOnly.Parse("04:11"),
+        TimeOnly.Parse("04:31"), TimeOnly.Parse("05:18"), TimeOnly.Parse("06:09"), TimeOnly.Parse("07:00"), TimeOnly.Parse("06:55"), TimeOnly.Parse("07:37")};
+
+    private static List<TimeOnly> SunsetByMonth = new() {
+        TimeOnly.Parse("15:54"), TimeOnly.Parse("16:49"), TimeOnly.Parse("17:42"), TimeOnly.Parse("19:36"), TimeOnly.Parse("20:26"), TimeOnly.Parse("21:01"),
+        TimeOnly.Parse("20:52"), TimeOnly.Parse("20:02"), TimeOnly.Parse("18:52"), TimeOnly.Parse("17:43"), TimeOnly.Parse("15:45"), TimeOnly.Parse("15:25") };
+
     private const string MessageOverrideLeft = "LEFT";
     private const string MessageOverrideRight = "RIGHT";
     private readonly bool _verbose = false;
@@ -60,8 +68,13 @@ internal sealed class AnimationManager
 
 
         using var motionDetectorLeft = MotionSensor.MotionSensor.CreateSensor(_leftMotionDetectorPin,
-            () => 
+            () =>
             {
+                if (DayLight(DateTime.Now))
+                {
+                    _logger.LogInformation("Motion detected: {direction}, but it's daylight at {time}", "LEFT", DateTime.Now.ToShortTimeString());
+                    return;
+                }
                 MovementLeft = true;
                 _logger.LogInformation("Motion detected: {direction}", "LEFT");
             },
@@ -83,6 +96,11 @@ internal sealed class AnimationManager
         using var motionDetectorRight = MotionSensor.MotionSensor.CreateSensor(_rightMotionDetectorPin,
             () =>
             {
+                if (DayLight(DateTime.Now))
+                {
+                    _logger.LogInformation("Motion detected: {direction}, but it's daylight at {time}", "RIGHT", DateTime.Now.ToShortTimeString());
+                    return;
+                }
                 MovementRight = true;
                 _logger.LogInformation("Motion detected: {direction}", "RIGHT");
             },
@@ -103,15 +121,15 @@ internal sealed class AnimationManager
         using var animation = _animationFactory.GetAnimation(typeof(TraceAnimation));
 
         _mqttClient.Connect(
-            () => 
-            { 
-                OverrideLeft = true; 
+            () =>
+            {
+                OverrideLeft = true;
                 OverrideRight = false;
                 _logger.LogInformation("Override signal: {direction}", "LEFT");
             },
-            () => 
-            { 
-                OverrideRight = true; 
+            () =>
+            {
+                OverrideRight = true;
                 OverrideLeft = false;
                 _logger.LogInformation("Override signal: {direction}", "RIGHT");
             },
@@ -185,5 +203,13 @@ internal sealed class AnimationManager
             }
 
         }
+    }
+
+    private static bool DayLight(DateTime dateTime)
+    {
+        var month = dateTime.Month;
+        var sunrise = SunriseByMonth[month - 1].ToTimeSpan();
+        var sunset = SunsetByMonth[month - 1].ToTimeSpan();
+        return dateTime.TimeOfDay >= sunrise && dateTime.TimeOfDay <= sunset;
     }
 }
