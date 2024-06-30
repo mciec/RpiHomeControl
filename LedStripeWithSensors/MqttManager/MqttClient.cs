@@ -108,12 +108,19 @@ internal sealed class MqttClient : IAsyncDisposable
             var connectResult = await _client.ConnectAsync().ConfigureAwait(false);
             if (connectResult.ReasonCode == HiveMQtt.MQTT5.ReasonCodes.ConnAckReasonCode.Success)
             {
-                _logger.LogInformation("Connected. Unsubscribing...");
-                foreach (var sub in _client.Subscriptions)
+                await Task.Delay(1000).ConfigureAwait(false);
+
+                if (_client.Subscriptions.Any())
                 {
-                    await _client.UnsubscribeAsync(sub).ConfigureAwait(false);
+                    _logger.LogInformation("Connected. Unsubscribing...");
+                    foreach (var sub in _client.Subscriptions)
+                    {
+                        await _client.UnsubscribeAsync(sub).ConfigureAwait(false);
+                    }
+                    _logger.LogInformation("Unsubscribed");
                 }
-                _logger.LogInformation("Unsubscribed. Subscribing...");
+
+                _logger.LogInformation("Subscribing...");
                 var subscribeResult = await _client.SubscribeAsync(_config.OverrideTopic).ConfigureAwait(false);
                 _logger.LogInformation("Subscribed. Subscription count: {count}", subscribeResult?.Subscriptions.Count);
 
