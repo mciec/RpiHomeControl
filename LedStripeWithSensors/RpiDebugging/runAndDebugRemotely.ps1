@@ -1,6 +1,6 @@
 $rpi = "192.168.8.20"
-Write-Host "RPI address:" $rpi
 #$rpi = 192.168.8.67
+Write-Host "RPI address:" $rpi
 ssh mciec@${rpi} pkill -f 'LedStripeWithSensors.dll'
 ssh mciec@${rpi} rm ~/projects/LedStripeWithSensors -f -r -d 
 ssh mciec@${rpi} mkdir ~/projects
