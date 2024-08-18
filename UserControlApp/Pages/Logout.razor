@@ -1,0 +1,10 @@
+﻿@page "/logout"
+
+@using UserControlApp.Authentication;
+@using UserControlApp.Components;
+@using Microsoft.AspNetCore.Authorization;
+@inject GoogleAuthenticationStateProvider _googleAuthenticationStateProvider
+
+<h3>Logout</h3>
+<UserDetail />
+<button @onclick="_googleAuthenticationStateProvider.Logout">Logout</button>

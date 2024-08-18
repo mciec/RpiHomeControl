@@ -1,0 +1,11 @@
+﻿@page "/login"
+
+@using UserControlApp.Authentication;
+@using Microsoft.AspNetCore.Authorization;
+@inject GoogleAuthenticationStateProvider _googleAuthenticationStateProvider
+@attribute [AllowAnonymous]
+
+<h3>Login</h3>
+<button @onclick='_ => _googleAuthenticationStateProvider.LoginAsync("blazorschool_admin", "blazorschool")'>Login as Admin</button>
+<button @onclick='_ => _googleAuthenticationStateProvider.LoginAsync("blazorschool_normal", "blazorschool")'>Login as Normal User</button>
+<button @onclick='_ => _googleAuthenticationStateProvider.LoginAsync("blazorschool_paid", "blazorschool")'>Login as Paid User</button>
