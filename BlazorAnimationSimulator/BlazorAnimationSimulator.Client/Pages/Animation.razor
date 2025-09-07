@@ -36,14 +36,14 @@
 
 @code {
     public IAnimation _animation = null!;
-    public RGB[] Matrix { get; set; }
+    public RGB[] Matrix { get; set; } = Array.Empty<RGB>();
 
     public CancellationTokenSource _cts = new();
     public Task _animationTask = null!;
 
-    public RGB[] Matrix2 { get; set; }
-    public RGB[] Matrix3 { get; set; }
-    public RGB[] Matrix4 { get; set; }
+    public RGB[] Matrix2 { get; set; } = Array.Empty<RGB>();
+    public RGB[] Matrix3 { get; set; } = Array.Empty<RGB>();
+    public RGB[] Matrix4 { get; set; } = Array.Empty<RGB>();
     public IAnimation _animation2 = null!;
     public IAnimation _animation3 = null!;
     public IAnimation _animation4 = null!;
